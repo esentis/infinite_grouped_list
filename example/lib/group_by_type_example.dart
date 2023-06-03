@@ -67,9 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<List<Transaction>> onLoadMore(int offset) async {
     await Future.delayed(const Duration(seconds: 1));
-    if (_listController.getItems().isNotEmpty && !dontThrowError) {
-      throw Exception('error');
-    }
+
     return List<Transaction>.generate(
       20,
       (index) {
@@ -84,10 +82,6 @@ class _MyHomePageState extends State<MyHomePage> {
       },
     );
   }
-
-  final InfiniteGroupedListController<Transaction, TransactionType, String>
-      _listController =
-      InfiniteGroupedListController<Transaction, TransactionType, String>();
 
   @override
   void initState() {
@@ -168,28 +162,15 @@ class _MyHomePageState extends State<MyHomePage> {
           subtitle: Text(item.dateTime.toString()),
         ),
         onLoadMore: (info) => onLoadMore(info.offset),
-        loadMoreItemsErrorWidget: GestureDetector(
-          onTap: () {
-            _listController.retry();
-          },
-          child: TextButton(
-            onPressed: () {
-              setState(() {
-                dontThrowError = !dontThrowError;
-              });
-              _listController.retry();
-            },
-            child: const Text(
-              'Something went wrong,\ntap to retry',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                decoration: TextDecoration.underline,
-                decorationColor: Colors.blue,
-                color: Colors.blue,
-              ),
-            ),
+        loadMoreItemsErrorWidget: const Text(
+          'Something went wrong,\ntap to retry',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            decoration: TextDecoration.underline,
+            decorationColor: Colors.blue,
+            color: Colors.blue,
           ),
         ),
         groupCreator: (type) {

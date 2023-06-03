@@ -64,12 +64,13 @@ class _MyHomePageState extends State<MyHomePage> {
   bool dontThrowError = false;
 
   DateTime baseDate = DateTime.now();
+  final InfiniteGroupedListController<Transaction, DateTime, String>
+      controller =
+      InfiniteGroupedListController<Transaction, DateTime, String>();
 
   Future<List<Transaction>> onLoadMore(int offset) async {
     await Future.delayed(const Duration(seconds: 1));
-    if (_listController.getItems().isNotEmpty && !dontThrowError) {
-      throw Exception('error');
-    }
+
     return List<Transaction>.generate(
       20,
       (index) {
@@ -84,10 +85,6 @@ class _MyHomePageState extends State<MyHomePage> {
       },
     );
   }
-
-  final InfiniteGroupedListController<Transaction, DateTime, String>
-      _listController =
-      InfiniteGroupedListController<Transaction, DateTime, String>();
 
   @override
   void initState() {
@@ -106,6 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
         elevation: 5,
       ),
       body: InfiniteGroupedList(
+        controller: controller,
         padding: const EdgeInsets.only(bottom: 20, top: 15),
         groupBy: (item) => item.dateTime,
         sortGroupBy: (item) => item.dateTime,
@@ -168,28 +166,15 @@ class _MyHomePageState extends State<MyHomePage> {
           subtitle: Text(item.dateTime.toIso8601String()),
         ),
         onLoadMore: (info) => onLoadMore(info.offset),
-        loadMoreItemsErrorWidget: GestureDetector(
-          onTap: () {
-            _listController.retry();
-          },
-          child: TextButton(
-            onPressed: () {
-              setState(() {
-                dontThrowError = !dontThrowError;
-              });
-              _listController.retry();
-            },
-            child: const Text(
-              'Something went wrong,\ntap to retry',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                decoration: TextDecoration.underline,
-                decorationColor: Colors.blue,
-                color: Colors.blue,
-              ),
-            ),
+        loadMoreItemsErrorWidget: const Text(
+          'Something went wrong,\ntap to retry',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            decoration: TextDecoration.underline,
+            decorationColor: Colors.blue,
+            color: Colors.blue,
           ),
         ),
         groupCreator: (dateTime) {
