@@ -65,7 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   DateTime baseDate = DateTime.now();
 
-  Future<List<Transaction>> onLoadMore() async {
+  Future<List<Transaction>> onLoadMore(int offset) async {
     await Future.delayed(const Duration(seconds: 1));
     if (_listController.getItems().isNotEmpty && !dontThrowError) {
       throw Exception('error');
@@ -106,7 +106,6 @@ class _MyHomePageState extends State<MyHomePage> {
         elevation: 5,
       ),
       body: InfiniteGroupedList<Transaction, TransactionType, String>(
-        controller: _listController,
         padding: const EdgeInsets.only(bottom: 20, top: 15),
         groupBy: (item) => item.type,
         sortGroupBy: (item) => item.dateTime,
@@ -168,7 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           subtitle: Text(item.dateTime.toString()),
         ),
-        onLoadMore: onLoadMore,
+        onLoadMore: (info) => onLoadMore(info.offset),
         loadMoreItemsErrorWidget: GestureDetector(
           onTap: () {
             _listController.retry();
