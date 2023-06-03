@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 
+class PaginationInfo {
+  final int offset;
+  final int page;
+
+  PaginationInfo({required this.offset, required this.page});
+}
+
 /// The sort order of the items inside the groups.
 enum SortOrder { ascending, descending }
 
@@ -11,6 +18,24 @@ enum SortOrder { ascending, descending }
 /// * refresh the list
 /// * get the items in the list
 class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
+  // This is the current offset of the list.
+  int _currentOffset = 0;
+
+  // Function to get the current offset
+  int get currentOffset => _currentOffset;
+
+  // Function to increment the offset
+  void incrementOffset(int offset) => _currentOffset += offset;
+
+  /// This is the current page of the list.
+  int _currentPage = 1;
+
+  /// Function to get the current page
+  int get currentPage => _currentPage;
+
+  /// Function to increment the page
+  void incrementPage() => _currentPage++;
+
   /// Call this function to refresh the list.
   late VoidCallback refresh;
 
@@ -66,7 +91,6 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     required this.groupBy,
     required this.groupCreator,
     required this.sortGroupBy,
-    this.controller,
     this.onRefresh,
     this.padding,
     this.noItemsFoundWidget,
@@ -82,48 +106,42 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     super.key,
   });
 
-  /// The controller of the list.
+  /// The function to call when the list needs to load more items.
   ///
-  /// You can use it to refresh the list or get the items in the list.
-  final InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>?
-      controller;
-
-  /// Fetches more items to be added to the list. This function is expected to return a Future that completes with a List<ItemType>.
-  /// The function is called each time the list is scrolled to its end and more items need to be loaded.
+  /// The function should take a PaginationInfo parameter representing the current
+  /// offset and page, for pagination.
   ///
-  /// This function is responsible for determining the "offset" or "page" of data to fetch, based on the data it has already fetched.
-  /// Typically, the function should keep track of the number of successful fetches it has made, and use that number to determine
-  /// what data to fetch next.
+  /// The widget will automatically increment the offset and page each time this function
+  /// is called, so your function just needs to use the provided PaginationInfo to fetch
+  /// the appropriate items.
   ///
-  /// If a fetch fails (that is, if the function throws an exception), it's the function's responsibility to remember this and try to
-  /// fetch the same data again the next time it's called. This typically involves keeping track of the last failed fetch.
+  /// The function should return a Future that completes with a list of new items
+  /// to be added to the list. The function is expected to return an empty list
+  /// when there are no more items to load, signaling the end of the available data.
   ///
-  /// Here's an example of how you might implement this:
+  /// #### Example usage (with an API that uses offset-based pagination):
   ///
   /// ```dart
-  /// int offset = 0;
-  /// final List<ItemType> items = [];
-  /// bool fetchFailed = false;
-  ///
-  /// Future<List<ItemType>> onLoadMore() async {
-  ///   try {
-  ///     List<ItemType> newItems = await fetchItems(offset);
-  ///     items.addAll(newItems);
-  ///     offset++;
-  ///     fetchFailed = false;
-  ///   } catch (e) {
-  ///     fetchFailed = true;
-  ///     // Handle error (e.g., show a message to the user)
-  ///   }
-  ///
-  ///   if (!fetchFailed) {
-  ///     offset++;
-  ///   }
-  ///
-  ///   return items;
+  /// onLoadMore: (paginationInfo) {
+  ///   // fetch 10 items starting from 'paginationInfo.offset'
+  ///   return myApi.getItems(offset: paginationInfo.offset, limit: 10);
   /// }
   /// ```
-  final Future<List<ItemType>> Function() onLoadMore;
+  ///
+  /// #### Example usage (with an API that uses page-based pagination):
+  ///
+  /// ```dart
+  /// onLoadMore: (paginationInfo) {
+  ///   // fetch 10 items starting from 'paginationInfo.page'
+  ///   return myApi.getItems(page: paginationInfo.page, limit: 10);
+  /// }
+  /// ```
+  ///
+  /// If an error occurs while fetching the items (for example, due to network
+  /// issues), the function should throw an exception. The widget will catch this
+  /// exception and call the [loadMoreItemsErrorWidget] builder.
+  final Future<List<ItemType>> Function(PaginationInfo paginationInfo)
+      onLoadMore;
 
   /// The item builder is used to build the item.
   final Widget Function(ItemType item) itemBuilder;
@@ -187,6 +205,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
 
   /// Whether the grpup should stick to the top of the screen when scrolling up.
   final bool stickyGroups;
+
   @override
   InfiniteGroupedListState<ItemType, GroupBy, GroupTitle> createState() =>
       InfiniteGroupedListState();
@@ -198,6 +217,8 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
   bool hasError = false;
 
   bool stillHasItems = true;
+  final InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>
+      _pageInformationController = InfiniteGroupedListController();
 
   final ScrollController _scrollController = ScrollController();
 
@@ -215,7 +236,18 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
       });
     }
     try {
-      final items = await widget.onLoadMore();
+      final items = await widget.onLoadMore(
+        PaginationInfo(
+          offset: _pageInformationController.currentOffset,
+          page: _pageInformationController._currentPage,
+        ),
+      );
+
+      // Increment the offset after a successful fetch
+      _pageInformationController.incrementOffset(items.length);
+
+      // Increment the page after a successful fetch
+      _pageInformationController.incrementPage();
 
       _items.addAll(items);
 
@@ -242,9 +274,21 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
     setState(() {
       loading = true;
     });
-
+    _pageInformationController._currentOffset = 0;
+    _pageInformationController._currentPage = 1;
     try {
-      final items = await widget.onLoadMore();
+      final items = await widget.onLoadMore(
+        PaginationInfo(
+          offset: _pageInformationController.currentOffset,
+          page: _pageInformationController._currentPage,
+        ),
+      );
+
+      // Increment the offset after a successful fetch
+      _pageInformationController.incrementOffset(items.length);
+
+      // Increment the page after a successful fetch
+      _pageInformationController.incrementPage();
 
       _items.addAll(items);
 
@@ -263,18 +307,10 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
     }
   }
 
-  List<ItemType> _getItems() {
-    return _items;
-  }
-
   @override
   void initState() {
     super.initState();
-    if (widget.controller != null) {
-      widget.controller!.refresh = _refresh;
-      widget.controller!.getItems = _getItems;
-      widget.controller!.retry = _initList;
-    }
+
     _initList();
     _scrollController.addListener(() async {
       if (_scrollController.offset >=
@@ -286,7 +322,19 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
           });
           List<ItemType> items = [];
           try {
-            items = await widget.onLoadMore();
+            items = await widget.onLoadMore(
+              PaginationInfo(
+                offset: _pageInformationController.currentOffset,
+                page: _pageInformationController._currentPage,
+              ),
+            );
+
+            // Increment the offset after a successful fetch
+            _pageInformationController.incrementOffset(items.length);
+
+            // Increment the page after a successful fetch
+            _pageInformationController.incrementPage();
+
             if (items.isEmpty) {
               stillHasItems = false;
               setState(() {
