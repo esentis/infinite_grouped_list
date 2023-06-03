@@ -1,52 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
-
-class PaginationInfo {
-  final int offset;
-  final int page;
-
-  PaginationInfo({required this.offset, required this.page});
-}
-
-/// The sort order of the items inside the groups.
-enum SortOrder { ascending, descending }
-
-/// This is the controller for the [InfiniteGroupedList].
-///
-/// You can use it to :
-///
-/// * refresh the list
-/// * get the items in the list
-class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
-  // This is the current offset of the list.
-  int _currentOffset = 0;
-
-  // Function to get the current offset
-  int get currentOffset => _currentOffset;
-
-  // Function to increment the offset
-  void incrementOffset(int offset) => _currentOffset += offset;
-
-  /// This is the current page of the list.
-  int _currentPage = 1;
-
-  /// Function to get the current page
-  int get currentPage => _currentPage;
-
-  /// Function to increment the page
-  void incrementPage() => _currentPage++;
-
-  /// Call this function to refresh the list.
-  late VoidCallback refresh;
-
-  /// Call this function to get the items in the list.
-  late List<ItemType> Function() getItems;
-
-  /// Retry the last failed load more call.
-  late Future<void> Function() retry;
-
-  InfiniteGroupedListController();
-}
+import 'package:infinite_grouped_list/helpers/pagination_info.dart';
 
 /// A list of items that are grouped and infinite.
 ///
@@ -91,6 +45,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     required this.groupBy,
     required this.groupCreator,
     required this.sortGroupBy,
+    this.controller,
     this.onRefresh,
     this.padding,
     this.noItemsFoundWidget,
@@ -206,6 +161,10 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// Whether the grpup should stick to the top of the screen when scrolling up.
   final bool stickyGroups;
 
+  /// The controller of the list.
+  final InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>?
+      controller;
+
   @override
   InfiniteGroupedListState<ItemType, GroupBy, GroupTitle> createState() =>
       InfiniteGroupedListState();
@@ -217,14 +176,14 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
   bool hasError = false;
 
   bool stillHasItems = true;
-  final InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>
-      _pageInformationController = InfiniteGroupedListController();
+  final _InfiniteGroupedListInternalController<ItemType, GroupBy, GroupTitle>
+      _pageInformationController = _InfiniteGroupedListInternalController();
 
   final ScrollController _scrollController = ScrollController();
 
-  final List<ItemType> _items = [];
+  final List<ItemType> _allItems = [];
 
-  late Map<GroupTitle, List<ItemType>> groupedItems = groupItems(_items);
+  late Map<GroupTitle, List<ItemType>> groupedItems = groupItems(_allItems);
 
   late List<GroupTitle> groupTitles = groupedItems.keys.toList();
 
@@ -239,7 +198,7 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
       final items = await widget.onLoadMore(
         PaginationInfo(
           offset: _pageInformationController.currentOffset,
-          page: _pageInformationController._currentPage,
+          page: _pageInformationController.currentPage,
         ),
       );
 
@@ -249,9 +208,9 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
       // Increment the page after a successful fetch
       _pageInformationController.incrementPage();
 
-      _items.addAll(items);
+      _allItems.addAll(items);
 
-      groupedItems = groupItems(_items);
+      groupedItems = groupItems(_allItems);
 
       groupTitles = groupedItems.keys.toList();
 
@@ -266,21 +225,25 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
     }
   }
 
+  /// Returns the items that are currently fetched.
+  List<ItemType> _items() => _allItems;
+
+  /// Refreshes the list resetting the offset and page to 0.
   Future<void> _refresh() async {
-    _items.clear();
+    _allItems.clear();
     widget.onRefresh?.call();
     stillHasItems = true;
     hasError = false;
     setState(() {
       loading = true;
     });
-    _pageInformationController._currentOffset = 0;
-    _pageInformationController._currentPage = 1;
+    _pageInformationController.currentOffset = 0;
+    _pageInformationController.currentPage = 1;
     try {
       final items = await widget.onLoadMore(
         PaginationInfo(
           offset: _pageInformationController.currentOffset,
-          page: _pageInformationController._currentPage,
+          page: _pageInformationController.currentPage,
         ),
       );
 
@@ -290,9 +253,48 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
       // Increment the page after a successful fetch
       _pageInformationController.incrementPage();
 
-      _items.addAll(items);
+      _allItems.addAll(items);
 
-      groupedItems = groupItems(_items);
+      groupedItems = groupItems(_allItems);
+
+      groupTitles = groupedItems.keys.toList();
+
+      setState(() {
+        loading = false;
+      });
+    } catch (e) {
+      hasError = true;
+      setState(() {
+        loading = false;
+      });
+    }
+  }
+
+  /// Retries the last failed fetch
+  Future<void> _retry() async {
+    if (!loading) {
+      setState(() {
+        loading = true;
+        hasError = false;
+      });
+    }
+    try {
+      final items = await widget.onLoadMore(
+        PaginationInfo(
+          offset: _pageInformationController.currentOffset,
+          page: _pageInformationController.currentPage,
+        ),
+      );
+
+      // Increment the offset after a successful fetch
+      _pageInformationController.incrementOffset(items.length);
+
+      // Increment the page after a successful fetch
+      _pageInformationController.incrementPage();
+
+      _allItems.addAll(items);
+
+      groupedItems = groupItems(_allItems);
 
       groupTitles = groupedItems.keys.toList();
 
@@ -311,6 +313,12 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
   void initState() {
     super.initState();
 
+    if (widget.controller != null) {
+      widget.controller!.getItems = _items;
+      widget.controller!.refresh = _refresh;
+      widget.controller!.loadItems = _retry;
+    }
+
     _initList();
     _scrollController.addListener(() async {
       if (_scrollController.offset >=
@@ -325,7 +333,7 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
             items = await widget.onLoadMore(
               PaginationInfo(
                 offset: _pageInformationController.currentOffset,
-                page: _pageInformationController._currentPage,
+                page: _pageInformationController.currentPage,
               ),
             );
 
@@ -342,8 +350,8 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
               });
               return;
             }
-            _items.addAll(items);
-            groupedItems = groupItems(_items);
+            _allItems.addAll(items);
+            groupedItems = groupItems(_allItems);
 
             groupTitles = groupedItems.keys.toList();
             setState(() {
@@ -362,7 +370,7 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
 
   @override
   Widget build(BuildContext context) {
-    return loading && _items.isEmpty
+    return loading && _allItems.isEmpty
         ? widget.loadingWidget
         : RefreshIndicator(
             color: widget.refreshIndicatorColor,
@@ -479,4 +487,48 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
     });
     return groupedItems;
   }
+}
+
+/// This is the controller for the [InfiniteGroupedList].
+///
+/// Use this controller to :
+///
+/// 1. Get the items in the list.
+/// 2. Retry the last failed load more call.
+/// 3. Refresh the list.
+class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
+  /// Call this function to get the items in the list.
+  late List<ItemType> Function() getItems;
+
+  /// Call this function to programmatically fetch the next page
+  ///
+  /// If the last call was failed then it will retry the last call.
+  late Future<void> Function() loadItems;
+
+  /// Refresh the list.
+  late Future<void> Function() refresh;
+
+  InfiniteGroupedListController();
+}
+
+/// This is the controller for the [InfiniteGroupedList].
+///
+/// You can use it to :
+///
+/// * refresh the list
+/// * get the items in the list
+class _InfiniteGroupedListInternalController<ItemType, GroupBy, GroupTitle> {
+  // This is the current offset of the list.
+  int currentOffset = 0;
+
+  // Function to increment the offset
+  void incrementOffset(int offset) => currentOffset += offset;
+
+  /// This is the current page of the list.
+  int currentPage = 1;
+
+  /// Function to increment the page
+  void incrementPage() => currentPage++;
+
+  _InfiniteGroupedListInternalController();
 }
