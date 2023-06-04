@@ -369,6 +369,13 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return loading && _allItems.isEmpty
         ? widget.loadingWidget
