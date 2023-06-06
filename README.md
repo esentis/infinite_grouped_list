@@ -1,6 +1,10 @@
-<center>
-<img src="https://i.imgur.com/eA2MXLC.gif" height="500px"></img>
-</center>
+<p align="center">
+<img src='https://i.imgur.com/eA2MXLC.gif' width=300>
+</p>
+<p align="center">
+ <img src="https://img.shields.io/pub/v/infinite_grouped_list?color=637d0d&style=for-the-badge" alt="Version" /> <img src="https://img.shields.io/github/languages/code-size/esentis/infinite_grouped_list?color=637d0d&style=for-the-badge&label=size" alt="Version" />
+</br>
+</p>
 
 # Infinite Grouped List
 
@@ -22,10 +26,13 @@ Brings together infinite scrolling, group-based item organization, and numerous 
 
 To use the InfiniteGroupedList widget, you need to provide several callbacks:
 
-`onLoadMore`: A function that fetches more data.
-`itemBuilder`: A function that builds the individual list items.
-`groupBy`: A function that defines the criterion for grouping items.
-`groupCreator`: A function that assigns a name to each group.
+- `onLoadMore(PaginationInfo)`: A function that fetches more data.
+
+- `PaginationInfo` is a helper class that keeps track of the current offset and page of the InfiniteGroupedList. It's primarily used in the onLoadMore function, providing necessary information for paginated data fetching from a backend or local data source. In a typical scenario, these values are used as parameters for API calls or database queries to load the appropriate 'page' of data. For instance, in the onLoadMore function, the PaginationInfo instance is passed as an argument where you could use paginationInfo.offset and paginationInfo.page to fetch data accordingly from your data source.
+
+- `itemBuilder`: A function that builds the individual list items.
+- `groupBy`: A function that defines the criterion for grouping items.
+- `groupCreator`: A function that assigns a name to each group.
 
 Additionally, the widget provides an `InfiniteGroupedListController`. This controller allows for programmatically fetching data and refreshing the list, providing you with precise control over the list's behavior.
 
