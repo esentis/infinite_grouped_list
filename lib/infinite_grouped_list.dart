@@ -446,7 +446,15 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
                     }).toList()
                       ..addAll([
                         if (loading)
-                          SliverToBoxAdapter(child: widget.loadingWidget),
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 14.0,
+                                top: 5.0,
+                              ),
+                              child: widget.loadingWidget,
+                            ),
+                          ),
                         if (hasError)
                           SliverToBoxAdapter(
                             child: widget.loadMoreItemsErrorWidget ??
