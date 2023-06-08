@@ -526,12 +526,6 @@ class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
   InfiniteGroupedListController();
 }
 
-/// This is the controller for the [InfiniteGroupedList].
-///
-/// You can use it to :
-///
-/// * refresh the list
-/// * get the items in the list
 class _InfiniteGroupedListInternalController<ItemType, GroupBy, GroupTitle> {
   // This is the current offset of the list.
   int currentOffset = 0;
