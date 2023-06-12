@@ -413,60 +413,63 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
                       )
                     ],
                   )
-                : CustomScrollView(
-                    controller: _scrollController,
-                    slivers: groupTitles.map<Widget>((title) {
-                      return SliverStickyHeader.builder(
-                        sticky: widget.stickyGroups,
-                        builder: (context, state) {
-                          return widget.groupTitleBuilder(
-                            title,
-                            widget.groupBy(
-                              groupedItems[title]!.first,
-                            ),
-                            state.isPinned,
-                            state.scrollPercentage,
-                          );
-                        },
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, i) {
-                              final item = groupedItems[title]![i];
-                              return Column(
-                                children: [
-                                  widget.itemBuilder(item),
-                                  widget.seperatorBuilder(item),
-                                ],
-                              );
-                            },
-                            childCount: groupedItems[title]!.length,
-                          ),
-                        ),
-                      );
-                    }).toList()
-                      ..addAll([
-                        if (loading)
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: 14.0,
-                                top: 5.0,
+                : Padding(
+                    padding: widget.padding ?? EdgeInsets.zero,
+                    child: CustomScrollView(
+                      controller: _scrollController,
+                      slivers: groupTitles.map<Widget>((title) {
+                        return SliverStickyHeader.builder(
+                          sticky: widget.stickyGroups,
+                          builder: (context, state) {
+                            return widget.groupTitleBuilder(
+                              title,
+                              widget.groupBy(
+                                groupedItems[title]!.first,
                               ),
-                              child: widget.loadingWidget,
+                              state.isPinned,
+                              state.scrollPercentage,
+                            );
+                          },
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, i) {
+                                final item = groupedItems[title]![i];
+                                return Column(
+                                  children: [
+                                    widget.itemBuilder(item),
+                                    widget.seperatorBuilder(item),
+                                  ],
+                                );
+                              },
+                              childCount: groupedItems[title]!.length,
                             ),
                           ),
-                        if (hasError)
-                          SliverToBoxAdapter(
-                            child: widget.loadMoreItemsErrorWidget ??
-                                const Text(
-                                  'Oops something went wrong !',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 20,
-                                  ),
+                        );
+                      }).toList()
+                        ..addAll([
+                          if (loading)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: 14.0,
+                                  top: 5.0,
                                 ),
-                          ),
-                      ]),
+                                child: widget.loadingWidget,
+                              ),
+                            ),
+                          if (hasError)
+                            SliverToBoxAdapter(
+                              child: widget.loadMoreItemsErrorWidget ??
+                                  const Text(
+                                    'Oops something went wrong !',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                            ),
+                        ]),
+                    ),
                   ),
           );
   }
