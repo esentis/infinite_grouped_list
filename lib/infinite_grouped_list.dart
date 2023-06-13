@@ -40,11 +40,11 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   const InfiniteGroupedList({
     required this.onLoadMore,
     required this.itemBuilder,
-    required this.seperatorBuilder,
     required this.groupTitleBuilder,
     required this.groupBy,
     required this.groupCreator,
-    required this.sortGroupBy,
+    this.sortGroupBy,
+    this.seperatorBuilder,
     this.isPaged = true,
     this.controller,
     this.onRefresh,
@@ -102,7 +102,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   final Widget Function(ItemType item) itemBuilder;
 
   /// The seperator builder is used to build the seperator between items.
-  final Widget Function(ItemType item) seperatorBuilder;
+  final Widget Function(ItemType item)? seperatorBuilder;
 
   /// Optionally if you want to do something when the user pulls to refresh.
   final VoidCallback? onRefresh;
@@ -137,14 +137,16 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// This will be shown at the bottom of the list.
   final Widget? loadMoreItemsErrorWidget;
 
-  /// Using this function you can return the field you want to group by.
+  /// Return the field of the item that you want to group by.
+  ///
+  /// Will be used by the [groupCreator] to create the title of the group.
   final GroupBy Function(ItemType item) groupBy;
 
-  /// Using this function you can return the title of the group.
+  /// Using the [groupBy] value, you can define how the group title should be created.
   final GroupTitle Function(GroupBy groupBy) groupCreator;
 
   /// You can define the field of which the items inside the groups should be sorted by.
-  final void Function(ItemType sortGroupBy) sortGroupBy;
+  final void Function(ItemType sortGroupBy)? sortGroupBy;
 
   /// The sort order of the items inside the groups.
   final SortOrder groupSortOrder;
@@ -399,7 +401,10 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
   @override
   Widget build(BuildContext context) {
     return loading && _allItems.isEmpty
-        ? widget.loadingWidget
+        ? widget.loadingWidget ??
+            const Center(
+              child: CircularProgressIndicator(),
+            )
         : RefreshIndicator(
             color: widget.refreshIndicatorColor,
             backgroundColor: widget.refreshIndicatorBackgroundColor,
@@ -456,7 +461,8 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
                               return Column(
                                 children: [
                                   widget.itemBuilder(item),
-                                  widget.seperatorBuilder(item),
+                                  if (widget.seperatorBuilder != null)
+                                    widget.seperatorBuilder!(item),
                                 ],
                               );
                             },
@@ -505,22 +511,23 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
         groupedItems[groupTitle] = [item];
       }
     }
-
-    groupedItems.forEach((key, value) {
-      if (widget.groupSortOrder == SortOrder.ascending) {
-        value.sort((a, b) {
-          return (widget.sortGroupBy(a) as Comparable?)
-                  ?.compareTo(widget.sortGroupBy(b) as Comparable?) ??
-              0;
-        });
-      } else {
-        value.sort((a, b) {
-          return (widget.sortGroupBy(b) as Comparable?)
-                  ?.compareTo(widget.sortGroupBy(a) as Comparable?) ??
-              0;
-        });
-      }
-    });
+    if (widget.sortGroupBy != null) {
+      groupedItems.forEach((key, value) {
+        if (widget.groupSortOrder == SortOrder.ascending) {
+          value.sort((a, b) {
+            return (widget.sortGroupBy!(a) as Comparable?)
+                    ?.compareTo(widget.sortGroupBy!(b) as Comparable?) ??
+                0;
+          });
+        } else {
+          value.sort((a, b) {
+            return (widget.sortGroupBy!(b) as Comparable?)
+                    ?.compareTo(widget.sortGroupBy!(a) as Comparable?) ??
+                0;
+          });
+        }
+      });
+    }
     return groupedItems;
   }
 }
