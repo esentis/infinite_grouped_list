@@ -64,9 +64,6 @@ class _MyHomePageState extends State<MyHomePage> {
   bool dontThrowError = false;
 
   DateTime baseDate = DateTime.now();
-  final InfiniteGroupedListController<Transaction, DateTime, String>
-      controller =
-      InfiniteGroupedListController<Transaction, DateTime, String>();
 
   Future<List<Transaction>> onLoadMore(int offset) async {
     await Future.delayed(const Duration(seconds: 1));
@@ -103,9 +100,6 @@ class _MyHomePageState extends State<MyHomePage> {
         elevation: 5,
       ),
       body: InfiniteGroupedList(
-        controller: controller,
-        padding: const EdgeInsets.only(bottom: 20, top: 15),
-        isPaged: false,
         groupBy: (item) => item.dateTime,
         sortGroupBy: (item) => item.dateTime,
         groupTitleBuilder: (title, groupBy, isPinned, scrollPercentage) =>
@@ -136,14 +130,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
         ),
-        seperatorBuilder: (item) => const Padding(
-          padding: EdgeInsets.only(bottom: 12.0),
-          child: Divider(
-            height: 1,
-            thickness: 1,
-            color: Colors.black12,
-          ),
-        ),
         itemBuilder: (item) => ListTile(
           title: Text(item.name),
           leading: item.type == TransactionType.transport
@@ -167,17 +153,6 @@ class _MyHomePageState extends State<MyHomePage> {
           subtitle: Text(item.dateTime.toIso8601String()),
         ),
         onLoadMore: (info) => onLoadMore(info.offset),
-        loadMoreItemsErrorWidget: const Text(
-          'Something went wrong,\ntap to retry',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            decoration: TextDecoration.underline,
-            decorationColor: Colors.blue,
-            color: Colors.blue,
-          ),
-        ),
         groupCreator: (dateTime) {
           final now = DateTime.now();
           final today = DateTime(now.year, now.month, now.day);

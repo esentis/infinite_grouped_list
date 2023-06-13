@@ -100,7 +100,6 @@ class _MyHomePageState extends State<MyHomePage> {
         elevation: 5,
       ),
       body: InfiniteGroupedList<Transaction, TransactionType, String>(
-        padding: const EdgeInsets.only(bottom: 20, top: 15),
         groupBy: (item) => item.type,
         sortGroupBy: (item) => item.dateTime,
         groupTitleBuilder: (title, groupBy, isPinned, scrollPercentage) =>
