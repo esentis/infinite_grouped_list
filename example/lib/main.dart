@@ -105,6 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: InfiniteGroupedList(
         controller: controller,
         padding: const EdgeInsets.only(bottom: 20, top: 15),
+        isPaged: false,
         groupBy: (item) => item.dateTime,
         sortGroupBy: (item) => item.dateTime,
         groupTitleBuilder: (title, groupBy, isPinned, scrollPercentage) =>
