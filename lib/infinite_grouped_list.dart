@@ -48,7 +48,6 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     this.isPaged = true,
     this.controller,
     this.onRefresh,
-    this.padding,
     this.noItemsFoundWidget,
     this.initialItemsErrorWidget,
     this.loadMoreItemsErrorWidget,
@@ -149,9 +148,6 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
 
   /// The sort order of the items inside the groups.
   final SortOrder groupSortOrder;
-
-  /// The padding of the list
-  final EdgeInsets? padding;
 
   /// The color of the refresh indicator
   final Color? refreshIndicatorColor;
@@ -438,63 +434,60 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
                       )
                     ],
                   )
-                : Padding(
-                    padding: widget.padding ?? EdgeInsets.zero,
-                    child: CustomScrollView(
-                      controller: _scrollController,
-                      slivers: groupTitles.map<Widget>((title) {
-                        return SliverStickyHeader.builder(
-                          sticky: widget.stickyGroups,
-                          builder: (context, state) {
-                            return widget.groupTitleBuilder(
-                              title,
-                              widget.groupBy(
-                                groupedItems[title]!.first,
+                : CustomScrollView(
+                    controller: _scrollController,
+                    slivers: groupTitles.map<Widget>((title) {
+                      return SliverStickyHeader.builder(
+                        sticky: widget.stickyGroups,
+                        builder: (context, state) {
+                          return widget.groupTitleBuilder(
+                            title,
+                            widget.groupBy(
+                              groupedItems[title]!.first,
+                            ),
+                            state.isPinned,
+                            state.scrollPercentage,
+                          );
+                        },
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, i) {
+                              final item = groupedItems[title]![i];
+                              return Column(
+                                children: [
+                                  widget.itemBuilder(item),
+                                  widget.seperatorBuilder(item),
+                                ],
+                              );
+                            },
+                            childCount: groupedItems[title]!.length,
+                          ),
+                        ),
+                      );
+                    }).toList()
+                      ..addAll([
+                        if (loading)
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 14.0,
+                                top: 5.0,
                               ),
-                              state.isPinned,
-                              state.scrollPercentage,
-                            );
-                          },
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, i) {
-                                final item = groupedItems[title]![i];
-                                return Column(
-                                  children: [
-                                    widget.itemBuilder(item),
-                                    widget.seperatorBuilder(item),
-                                  ],
-                                );
-                              },
-                              childCount: groupedItems[title]!.length,
+                              child: widget.loadingWidget,
                             ),
                           ),
-                        );
-                      }).toList()
-                        ..addAll([
-                          if (loading)
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: 14.0,
-                                  top: 5.0,
-                                ),
-                                child: widget.loadingWidget,
-                              ),
-                            ),
-                          if (hasError)
-                            SliverToBoxAdapter(
-                              child: widget.loadMoreItemsErrorWidget ??
-                                  const Text(
-                                    'Oops something went wrong !',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 20,
-                                    ),
+                        if (hasError)
+                          SliverToBoxAdapter(
+                            child: widget.loadMoreItemsErrorWidget ??
+                                const Text(
+                                  'Oops something went wrong !',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 20,
                                   ),
-                            ),
-                        ]),
-                    ),
+                                ),
+                          ),
+                      ]),
                   ),
           );
   }
