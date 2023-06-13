@@ -45,6 +45,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     required this.groupBy,
     required this.groupCreator,
     required this.sortGroupBy,
+    this.isPaged = true,
     this.controller,
     this.onRefresh,
     this.padding,
@@ -161,6 +162,11 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// Whether the grpup should stick to the top of the screen when scrolling up.
   final bool stickyGroups;
 
+  /// Whether the [onLoadMore] uses paging. If it does not, this should be set as [false]
+  ///
+  /// otherwise it will keep on adding the same items to the list.
+  final bool isPaged;
+
   /// The controller of the list.
   final InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>?
       controller;
@@ -188,7 +194,7 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
   late List<GroupTitle> groupTitles = groupedItems.keys.toList();
 
   Future<void> _initList() async {
-    if (!loading) {
+    if (!loading && mounted) {
       setState(() {
         loading = true;
         hasError = false;
@@ -213,15 +219,18 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
       groupedItems = groupItems(_allItems);
 
       groupTitles = groupedItems.keys.toList();
-
-      setState(() {
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     } catch (e) {
       hasError = true;
-      setState(() {
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     }
   }
 
@@ -234,9 +243,11 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
     widget.onRefresh?.call();
     stillHasItems = true;
     hasError = false;
-    setState(() {
-      loading = true;
-    });
+    if (mounted) {
+      setState(() {
+        loading = true;
+      });
+    }
     _pageInformationController.currentOffset = 0;
     _pageInformationController.currentPage = 1;
     try {
@@ -259,20 +270,24 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
 
       groupTitles = groupedItems.keys.toList();
 
-      setState(() {
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     } catch (e) {
       hasError = true;
-      setState(() {
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     }
   }
 
   /// Retries the last failed fetch
   Future<void> _retry() async {
-    if (!loading) {
+    if (!loading && mounted) {
       setState(() {
         loading = true;
         hasError = false;
@@ -297,15 +312,18 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
       groupedItems = groupItems(_allItems);
 
       groupTitles = groupedItems.keys.toList();
-
-      setState(() {
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     } catch (e) {
       hasError = true;
-      setState(() {
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     }
   }
 
@@ -322,8 +340,9 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
     _initList();
     _scrollController.addListener(() async {
       if (_scrollController.offset >=
-          _scrollController.position.maxScrollExtent - 100) {
-        if (!loading && stillHasItems && !hasError) {
+              _scrollController.position.maxScrollExtent - 100 &&
+          widget.isPaged) {
+        if (!loading && stillHasItems && !hasError && mounted) {
           setState(() {
             loading = true;
             hasError = false;
@@ -345,23 +364,29 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
 
             if (items.isEmpty) {
               stillHasItems = false;
-              setState(() {
-                loading = false;
-              });
+              if (mounted) {
+                setState(() {
+                  loading = false;
+                });
+              }
               return;
             }
             _allItems.addAll(items);
             groupedItems = groupItems(_allItems);
 
             groupTitles = groupedItems.keys.toList();
-            setState(() {
-              loading = false;
-            });
+            if (mounted) {
+              setState(() {
+                loading = false;
+              });
+            }
           } catch (e) {
             hasError = true;
-            setState(() {
-              loading = false;
-            });
+            if (mounted) {
+              setState(() {
+                loading = false;
+              });
+            }
           }
         }
       }
