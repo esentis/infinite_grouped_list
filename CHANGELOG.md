@@ -1,3 +1,10 @@
+## 1.0.2 ✨ Simplifies & Improves API
+
+- Fields made optional:
+  - `seperatorBuilder`
+  - `sortGroupBy`
+- Removes the `padding` that was not removed on previous version.
+
 ## 1.0.1 🐛 Bug fixes & API improvements
 
 - Removes `padding` parameter as it does not correspond to anything
