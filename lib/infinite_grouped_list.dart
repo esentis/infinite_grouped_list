@@ -166,6 +166,10 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   final bool isPaged;
 
   /// The controller of the list.
+  ///
+  /// - Get the items in the list.
+  /// - Retry the last failed load more call.
+  /// - Refresh the list.
   final InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>?
       controller;
 
