@@ -405,10 +405,7 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
   @override
   Widget build(BuildContext context) {
     return loading && _allItems.isEmpty
-        ? widget.loadingWidget ??
-            const Center(
-              child: CircularProgressIndicator(),
-            )
+        ? widget.loadingWidget
         : RefreshIndicator(
             color: widget.refreshIndicatorColor,
             backgroundColor: widget.refreshIndicatorBackgroundColor,
