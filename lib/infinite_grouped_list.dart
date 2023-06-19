@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:infinite_grouped_list/helpers/pagination_info.dart';
 
+enum ListStyle {
+  /// The list will be displayed as a grid.
+  grid,
+
+  /// The list will be displayed as a list.
+  listView,
+}
+
 /// A list of items that are grouped and infinite.
 ///
 /// This list fetches data in chunks, creating an "infinite scroll" experience for
@@ -20,6 +28,110 @@ import 'package:infinite_grouped_list/helpers/pagination_info.dart';
 /// have GroupTitle be String, if you want to display the birthdays as string titles.
 class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     extends StatefulWidget {
+  factory InfiniteGroupedList({
+    required Widget Function(ItemType item) itemBuilder,
+    required GroupBy Function(ItemType item) groupBy,
+    required Widget Function(
+      GroupTitle title,
+      GroupBy groupBy,
+      bool isPinned,
+      double scrollPercentage,
+    ) groupTitleBuilder,
+    required Future<List<ItemType>> Function(PaginationInfo paginationInfo)
+        onLoadMore,
+    required GroupTitle Function(GroupBy) groupCreator,
+    Function(ItemType)? sortGroupBy,
+    Widget Function(ItemType)? seperatorBuilder,
+    bool isPaged = true,
+    InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
+    Function()? onRefresh,
+    Widget? noItemsFoundWidget,
+    Widget? initialItemsErrorWidget,
+    Widget? loadMoreItemsErrorWidget,
+    SortOrder groupSortOrder = SortOrder.descending,
+    bool stickyGroups = true,
+    Widget loadingWidget = const Center(
+      child: CircularProgressIndicator(),
+    ),
+    Color? refreshIndicatorColor,
+    Color? refreshIndicatorBackgroundColor,
+  }) {
+    return InfiniteGroupedList._(
+      onLoadMore: onLoadMore,
+      itemBuilder: itemBuilder,
+      groupTitleBuilder: groupTitleBuilder,
+      groupBy: groupBy,
+      groupCreator: groupCreator,
+      sortGroupBy: sortGroupBy,
+      seperatorBuilder: seperatorBuilder,
+      isPaged: isPaged,
+      controller: controller,
+      onRefresh: onRefresh,
+      noItemsFoundWidget: noItemsFoundWidget,
+      initialItemsErrorWidget: initialItemsErrorWidget,
+      loadMoreItemsErrorWidget: loadMoreItemsErrorWidget,
+      groupSortOrder: groupSortOrder,
+      stickyGroups: stickyGroups,
+      loadingWidget: loadingWidget,
+      refreshIndicatorColor: refreshIndicatorColor,
+      refreshIndicatorBackgroundColor: refreshIndicatorBackgroundColor,
+      listStyle: ListStyle.listView,
+    );
+  }
+
+  factory InfiniteGroupedList.gridView({
+    required Widget Function(ItemType item) itemBuilder,
+    required GroupBy Function(ItemType item) groupBy,
+    required Widget Function(
+      GroupTitle title,
+      GroupBy groupBy,
+      bool isPinned,
+      double scrollPercentage,
+    ) groupTitleBuilder,
+    required Future<List<ItemType>> Function(PaginationInfo paginationInfo)
+        onLoadMore,
+    required GroupTitle Function(GroupBy) groupCreator,
+    Function(ItemType)? sortGroupBy,
+    SliverGridDelegate? gridDelegate,
+    Widget Function(ItemType)? seperatorBuilder,
+    bool isPaged = true,
+    InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
+    Function()? onRefresh,
+    Widget? noItemsFoundWidget,
+    Widget? initialItemsErrorWidget,
+    Widget? loadMoreItemsErrorWidget,
+    SortOrder groupSortOrder = SortOrder.descending,
+    bool stickyGroups = true,
+    Widget loadingWidget = const Center(
+      child: CircularProgressIndicator(),
+    ),
+    Color? refreshIndicatorColor,
+    Color? refreshIndicatorBackgroundColor,
+  }) {
+    return InfiniteGroupedList._(
+      onLoadMore: onLoadMore,
+      itemBuilder: itemBuilder,
+      groupTitleBuilder: groupTitleBuilder,
+      groupBy: groupBy,
+      groupCreator: groupCreator,
+      sortGroupBy: sortGroupBy,
+      seperatorBuilder: seperatorBuilder,
+      isPaged: isPaged,
+      controller: controller,
+      onRefresh: onRefresh,
+      noItemsFoundWidget: noItemsFoundWidget,
+      initialItemsErrorWidget: initialItemsErrorWidget,
+      loadMoreItemsErrorWidget: loadMoreItemsErrorWidget,
+      groupSortOrder: groupSortOrder,
+      stickyGroups: stickyGroups,
+      loadingWidget: loadingWidget,
+      refreshIndicatorColor: refreshIndicatorColor,
+      refreshIndicatorBackgroundColor: refreshIndicatorBackgroundColor,
+      gridDelegate: gridDelegate,
+      listStyle: ListStyle.grid,
+    );
+  }
+
   /// Constructs an instance of InfiniteGroupedList.
   ///
   /// This requires several callback parameters:
@@ -37,12 +149,13 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// [initialItemsErrorWidget], [loadMoreItemsErrorWidget], [groupSortOrder],
   /// [loadingWidget], [refreshIndicatorColor], and
   /// [refreshIndicatorBackgroundColor].
-  const InfiniteGroupedList({
+  const InfiniteGroupedList._({
     required this.onLoadMore,
     required this.itemBuilder,
     required this.groupTitleBuilder,
     required this.groupBy,
     required this.groupCreator,
+    required this.listStyle,
     this.sortGroupBy,
     this.seperatorBuilder,
     this.isPaged = true,
@@ -58,8 +171,12 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     ),
     this.refreshIndicatorColor,
     this.refreshIndicatorBackgroundColor,
+    this.gridDelegate,
     super.key,
   });
+
+  final SliverGridDelegate? gridDelegate;
+  final ListStyle listStyle;
 
   /// The function to call when the list needs to load more items.
   ///
@@ -174,11 +291,11 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       controller;
 
   @override
-  InfiniteGroupedListState<ItemType, GroupBy, GroupTitle> createState() =>
-      InfiniteGroupedListState();
+  _InfiniteGroupState<ItemType, GroupBy, GroupTitle> createState() =>
+      _InfiniteGroupState();
 }
 
-class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
+class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     extends State<InfiniteGroupedList<ItemType, GroupBy, GroupTitle>> {
   bool loading = true;
   bool hasError = false;
@@ -455,21 +572,42 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
                             state.scrollPercentage,
                           );
                         },
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, i) {
-                              final item = groupedItems[title]![i];
-                              return Column(
-                                children: [
-                                  widget.itemBuilder(item),
-                                  if (widget.seperatorBuilder != null)
-                                    widget.seperatorBuilder!(item),
-                                ],
-                              );
-                            },
-                            childCount: groupedItems[title]!.length,
-                          ),
-                        ),
+                        sliver: widget.listStyle == ListStyle.listView
+                            ? SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, i) {
+                                    final item = groupedItems[title]![i];
+                                    return Column(
+                                      children: [
+                                        widget.itemBuilder(item),
+                                        if (widget.seperatorBuilder != null)
+                                          widget.seperatorBuilder!(item),
+                                      ],
+                                    );
+                                  },
+                                  childCount: groupedItems[title]!.length,
+                                ),
+                              )
+                            : SliverGrid(
+                                gridDelegate: widget.gridDelegate ??
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 3,
+                                      childAspectRatio: 2,
+                                    ),
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, i) {
+                                    final item = groupedItems[title]![i];
+                                    return Column(
+                                      children: [
+                                        widget.itemBuilder(item),
+                                        if (widget.seperatorBuilder != null)
+                                          widget.seperatorBuilder!(item),
+                                      ],
+                                    );
+                                  },
+                                  childCount: groupedItems[title]!.length,
+                                ),
+                              ),
                       );
                     }).toList()
                       ..addAll([
