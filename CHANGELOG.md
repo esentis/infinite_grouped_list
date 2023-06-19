@@ -1,4 +1,9 @@
-## 1.0.2 ✨ Simplifies & Improves API
+## 1.1.0 ✨ New Features - Simplifies & Improves API
+
+- Adds new builder `InfiniteGroupedList.gridView`.
+  Define your `gridDelegate` and customise it as you want.
+
+<img src='https://i.imgur.com/hRv7sEq.gif' height=550>
 
 - Fields made optional:
   - `seperatorBuilder`

@@ -36,4 +36,4 @@ To use the InfiniteGroupedList widget, you need to provide several callbacks:
 
 The InfiniteGroupedList widget is a comprehensive solution for any use case that involves displaying large amounts of data in an organized, easy-to-navigate manner.
 
-Examples can be found [here](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_date_example.dart) & [here](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_type_example.dart).
+Examples can be found [here](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_date_example.dart), [here](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_type_example.dart) & [here](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_date_grid_example.dart).
