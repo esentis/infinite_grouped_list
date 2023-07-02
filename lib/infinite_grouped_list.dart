@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
+import 'package:infinite_grouped_list/helpers/enums.dart';
 import 'package:infinite_grouped_list/helpers/pagination_info.dart';
-
-enum ListStyle {
-  /// The list will be displayed as a grid.
-  grid,
-
-  /// The list will be displayed as a list.
-  listView,
-}
 
 /// A list of items that are grouped and infinite.
 ///
