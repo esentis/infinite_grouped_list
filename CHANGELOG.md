@@ -1,5 +1,7 @@
 ## 1.1.1
 
+- Internal code refactoring
+
 ## 1.1.0 ✨ New Features - Simplifies & Improves API
 
 - Adds new builder `InfiniteGroupedList.gridView`.
