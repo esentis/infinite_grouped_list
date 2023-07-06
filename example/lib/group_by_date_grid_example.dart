@@ -83,6 +83,23 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Widget getTransactionIcon(TransactionType type) {
+    switch (type) {
+      case TransactionType.transport:
+        return const Icon(Icons.directions_bus);
+      case TransactionType.food:
+        return const Icon(Icons.fastfood);
+      case TransactionType.shopping:
+        return const Icon(Icons.shopping_bag);
+      case TransactionType.entertainment:
+        return const Icon(Icons.movie);
+      case TransactionType.health:
+        return const Icon(Icons.medical_services);
+      default:
+        return const Icon(Icons.money);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -147,17 +164,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                item.type == TransactionType.transport
-                    ? const Icon(Icons.directions_bus)
-                    : item.type == TransactionType.food
-                        ? const Icon(Icons.fastfood)
-                        : item.type == TransactionType.shopping
-                            ? const Icon(Icons.shopping_bag)
-                            : item.type == TransactionType.entertainment
-                                ? const Icon(Icons.movie)
-                                : item.type == TransactionType.health
-                                    ? const Icon(Icons.medical_services)
-                                    : const Icon(Icons.money),
+                getTransactionIcon(item.type),
                 Text(item.name),
                 Text(
                   '${item.amount.toStringAsFixed(2)}€',
