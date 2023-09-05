@@ -46,15 +46,13 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -64,7 +62,8 @@ class _MyHomePageState extends State<MyHomePage> {
   bool dontThrowError = false;
 
   DateTime baseDate = DateTime.now();
-
+  InfiniteGroupedListController<Transaction, DateTime, String> controller =
+      InfiniteGroupedListController<Transaction, DateTime, String>();
   Future<List<Transaction>> onLoadMore(int offset) async {
     await Future.delayed(const Duration(seconds: 1));
 
@@ -101,6 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: InfiniteGroupedList(
         groupBy: (item) => item.dateTime,
+        controller: controller,
         sortGroupBy: (item) => item.dateTime,
         groupTitleBuilder: (title, groupBy, isPinned, scrollPercentage) =>
             Padding(

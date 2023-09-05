@@ -547,7 +547,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
                                     ),
                                   ),
                         ),
-                      )
+                      ),
                     ],
                   )
                 : CustomScrollView(
@@ -683,7 +683,9 @@ class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
   /// Refresh the list.
   late Future<void> Function() refresh;
 
-  InfiniteGroupedListController();
+  InfiniteGroupedListController() {
+    getItems = () => []; // initialize with an empty list by default
+  }
 }
 
 class _InfiniteGroupedListInternalController<ItemType, GroupBy, GroupTitle> {
