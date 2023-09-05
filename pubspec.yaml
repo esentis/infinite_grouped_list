@@ -1,6 +1,6 @@
 name: infinite_grouped_list
 description: Dynamic scrolling list in Flutter, efficiently grouping items and seamlessly loading more data as user scrolls
-version: 1.1.1
+version: 1.1.2
 homepage: "https://github.com/esentis/infinite_grouped_list"
 screenshots:
   - description: "Infinite Grouped List with sticky headers"
