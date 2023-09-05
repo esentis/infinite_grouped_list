@@ -28,14 +28,12 @@ To use the InfiniteGroupedList widget, you need to provide several callbacks:
 
 - `onLoadMore(PaginationInfo)`: A function that fetches more data.
 
-- `PaginationInfo` is a helper class that keeps track of the current offset and page of the InfiniteGroupedList. It's primarily used in the onLoadMore function, providing necessary information for paginated data fetching from a backend or local data source. In a typical scenario, these values are used as parameters for API calls or database queries to load the appropriate 'page' of data. For instance, in the onLoadMore function, the PaginationInfo instance is passed as an argument where you could use paginationInfo.offset and paginationInfo.page to fetch data accordingly from your data source.
+  - `PaginationInfo` is a helper class that keeps track of the current offset and page of the InfiniteGroupedList. It's primarily used in the onLoadMore function, providing necessary information for paginated data fetching from a backend or local data source. In a typical scenario, these values are used as parameters for API calls or database queries to load the appropriate 'page' of data. For instance, in the onLoadMore function, the PaginationInfo instance is passed as an argument where you could use paginationInfo.offset and paginationInfo.page to fetch data accordingly from your data source.
 
 - `itemBuilder`: A function that builds the individual list items.
 - `groupBy`: A function that defines the criterion for grouping items.
 - `groupCreator`: A function that assigns a name to each group.
 
-Additionally, the widget provides an `InfiniteGroupedListController`. This controller allows for programmatically fetching data and refreshing the list, providing you with precise control over the list's behavior.
-
 The InfiniteGroupedList widget is a comprehensive solution for any use case that involves displaying large amounts of data in an organized, easy-to-navigate manner.
 
-Examples can be found [here](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_date_example.dart) & [here](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_type_example.dart).
+Examples can be found [here](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_date_example.dart), [here](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_type_example.dart) & [here](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_date_grid_example.dart).

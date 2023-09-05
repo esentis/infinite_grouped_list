@@ -52,7 +52,9 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+  const MyHomePage({
+    super.key,
+  });
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -62,8 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool dontThrowError = false;
 
   DateTime baseDate = DateTime.now();
-  InfiniteGroupedListController<Transaction, DateTime, String> controller =
-      InfiniteGroupedListController<Transaction, DateTime, String>();
+
   Future<List<Transaction>> onLoadMore(int offset) async {
     await Future.delayed(const Duration(seconds: 1));
 
@@ -82,6 +83,23 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Widget getTransactionIcon(TransactionType type) {
+    switch (type) {
+      case TransactionType.transport:
+        return const Icon(Icons.directions_bus);
+      case TransactionType.food:
+        return const Icon(Icons.fastfood);
+      case TransactionType.shopping:
+        return const Icon(Icons.shopping_bag);
+      case TransactionType.entertainment:
+        return const Icon(Icons.movie);
+      case TransactionType.health:
+        return const Icon(Icons.medical_services);
+      default:
+        return const Icon(Icons.money);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -98,9 +116,8 @@ class _MyHomePageState extends State<MyHomePage> {
         centerTitle: true,
         elevation: 5,
       ),
-      body: InfiniteGroupedList(
+      body: InfiniteGroupedList.gridView(
         groupBy: (item) => item.dateTime,
-        controller: controller,
         sortGroupBy: (item) => item.dateTime,
         groupTitleBuilder: (title, groupBy, isPinned, scrollPercentage) =>
             Padding(
@@ -130,27 +147,34 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
         ),
-        itemBuilder: (item) => ListTile(
-          title: Text(item.name),
-          leading: item.type == TransactionType.transport
-              ? const Icon(Icons.directions_bus)
-              : item.type == TransactionType.food
-                  ? const Icon(Icons.fastfood)
-                  : item.type == TransactionType.shopping
-                      ? const Icon(Icons.shopping_bag)
-                      : item.type == TransactionType.entertainment
-                          ? const Icon(Icons.movie)
-                          : item.type == TransactionType.health
-                              ? const Icon(Icons.medical_services)
-                              : const Icon(Icons.money),
-          trailing: Text(
-            '${item.amount.toStringAsFixed(2)}€',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+        itemBuilder: (item) => Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 5,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(18.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                getTransactionIcon(item.type),
+                Text(item.name),
+                Text(
+                  '${item.amount.toStringAsFixed(2)}€',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
-          subtitle: Text(item.dateTime.toIso8601String()),
         ),
         onLoadMore: (info) => onLoadMore(info.offset),
         groupCreator: (dateTime) {

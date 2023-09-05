@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
+import 'package:infinite_grouped_list/helpers/enums.dart';
 import 'package:infinite_grouped_list/helpers/pagination_info.dart';
 
 /// A list of items that are grouped and infinite.
@@ -20,6 +21,110 @@ import 'package:infinite_grouped_list/helpers/pagination_info.dart';
 /// have GroupTitle be String, if you want to display the birthdays as string titles.
 class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     extends StatefulWidget {
+  factory InfiniteGroupedList({
+    required Widget Function(ItemType item) itemBuilder,
+    required GroupBy Function(ItemType item) groupBy,
+    required Widget Function(
+      GroupTitle title,
+      GroupBy groupBy,
+      bool isPinned,
+      double scrollPercentage,
+    ) groupTitleBuilder,
+    required Future<List<ItemType>> Function(PaginationInfo paginationInfo)
+        onLoadMore,
+    required GroupTitle Function(GroupBy) groupCreator,
+    Function(ItemType)? sortGroupBy,
+    Widget Function(ItemType)? seperatorBuilder,
+    bool isPaged = true,
+    InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
+    Function()? onRefresh,
+    Widget? noItemsFoundWidget,
+    Widget? initialItemsErrorWidget,
+    Widget? loadMoreItemsErrorWidget,
+    SortOrder groupSortOrder = SortOrder.descending,
+    bool stickyGroups = true,
+    Widget loadingWidget = const Center(
+      child: CircularProgressIndicator(),
+    ),
+    Color? refreshIndicatorColor,
+    Color? refreshIndicatorBackgroundColor,
+  }) {
+    return InfiniteGroupedList._(
+      onLoadMore: onLoadMore,
+      itemBuilder: itemBuilder,
+      groupTitleBuilder: groupTitleBuilder,
+      groupBy: groupBy,
+      groupCreator: groupCreator,
+      sortGroupBy: sortGroupBy,
+      seperatorBuilder: seperatorBuilder,
+      isPaged: isPaged,
+      controller: controller,
+      onRefresh: onRefresh,
+      noItemsFoundWidget: noItemsFoundWidget,
+      initialItemsErrorWidget: initialItemsErrorWidget,
+      loadMoreItemsErrorWidget: loadMoreItemsErrorWidget,
+      groupSortOrder: groupSortOrder,
+      stickyGroups: stickyGroups,
+      loadingWidget: loadingWidget,
+      refreshIndicatorColor: refreshIndicatorColor,
+      refreshIndicatorBackgroundColor: refreshIndicatorBackgroundColor,
+      listStyle: ListStyle.listView,
+    );
+  }
+
+  factory InfiniteGroupedList.gridView({
+    required Widget Function(ItemType item) itemBuilder,
+    required GroupBy Function(ItemType item) groupBy,
+    required Widget Function(
+      GroupTitle title,
+      GroupBy groupBy,
+      bool isPinned,
+      double scrollPercentage,
+    ) groupTitleBuilder,
+    required Future<List<ItemType>> Function(PaginationInfo paginationInfo)
+        onLoadMore,
+    required GroupTitle Function(GroupBy) groupCreator,
+    Function(ItemType)? sortGroupBy,
+    SliverGridDelegate? gridDelegate,
+    Widget Function(ItemType)? seperatorBuilder,
+    bool isPaged = true,
+    InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
+    Function()? onRefresh,
+    Widget? noItemsFoundWidget,
+    Widget? initialItemsErrorWidget,
+    Widget? loadMoreItemsErrorWidget,
+    SortOrder groupSortOrder = SortOrder.descending,
+    bool stickyGroups = true,
+    Widget loadingWidget = const Center(
+      child: CircularProgressIndicator(),
+    ),
+    Color? refreshIndicatorColor,
+    Color? refreshIndicatorBackgroundColor,
+  }) {
+    return InfiniteGroupedList._(
+      onLoadMore: onLoadMore,
+      itemBuilder: itemBuilder,
+      groupTitleBuilder: groupTitleBuilder,
+      groupBy: groupBy,
+      groupCreator: groupCreator,
+      sortGroupBy: sortGroupBy,
+      seperatorBuilder: seperatorBuilder,
+      isPaged: isPaged,
+      controller: controller,
+      onRefresh: onRefresh,
+      noItemsFoundWidget: noItemsFoundWidget,
+      initialItemsErrorWidget: initialItemsErrorWidget,
+      loadMoreItemsErrorWidget: loadMoreItemsErrorWidget,
+      groupSortOrder: groupSortOrder,
+      stickyGroups: stickyGroups,
+      loadingWidget: loadingWidget,
+      refreshIndicatorColor: refreshIndicatorColor,
+      refreshIndicatorBackgroundColor: refreshIndicatorBackgroundColor,
+      gridDelegate: gridDelegate,
+      listStyle: ListStyle.grid,
+    );
+  }
+
   /// Constructs an instance of InfiniteGroupedList.
   ///
   /// This requires several callback parameters:
@@ -37,17 +142,18 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// [initialItemsErrorWidget], [loadMoreItemsErrorWidget], [groupSortOrder],
   /// [loadingWidget], [refreshIndicatorColor], and
   /// [refreshIndicatorBackgroundColor].
-  const InfiniteGroupedList({
+  const InfiniteGroupedList._({
     required this.onLoadMore,
     required this.itemBuilder,
-    required this.seperatorBuilder,
     required this.groupTitleBuilder,
     required this.groupBy,
     required this.groupCreator,
-    required this.sortGroupBy,
+    required this.listStyle,
+    this.sortGroupBy,
+    this.seperatorBuilder,
+    this.isPaged = true,
     this.controller,
     this.onRefresh,
-    this.padding,
     this.noItemsFoundWidget,
     this.initialItemsErrorWidget,
     this.loadMoreItemsErrorWidget,
@@ -58,8 +164,12 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     ),
     this.refreshIndicatorColor,
     this.refreshIndicatorBackgroundColor,
+    this.gridDelegate,
     super.key,
   });
+
+  final SliverGridDelegate? gridDelegate;
+  final ListStyle listStyle;
 
   /// The function to call when the list needs to load more items.
   ///
@@ -102,7 +212,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   final Widget Function(ItemType item) itemBuilder;
 
   /// The seperator builder is used to build the seperator between items.
-  final Widget Function(ItemType item) seperatorBuilder;
+  final Widget Function(ItemType item)? seperatorBuilder;
 
   /// Optionally if you want to do something when the user pulls to refresh.
   final VoidCallback? onRefresh;
@@ -137,20 +247,19 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// This will be shown at the bottom of the list.
   final Widget? loadMoreItemsErrorWidget;
 
-  /// Using this function you can return the field you want to group by.
+  /// Return the field of the item that you want to group by.
+  ///
+  /// Will be used by the [groupCreator] to create the title of the group.
   final GroupBy Function(ItemType item) groupBy;
 
-  /// Using this function you can return the title of the group.
+  /// Using the [groupBy] value, you can define how the group title should be created.
   final GroupTitle Function(GroupBy groupBy) groupCreator;
 
   /// You can define the field of which the items inside the groups should be sorted by.
-  final void Function(ItemType sortGroupBy) sortGroupBy;
+  final void Function(ItemType sortGroupBy)? sortGroupBy;
 
   /// The sort order of the items inside the groups.
   final SortOrder groupSortOrder;
-
-  /// The padding of the list
-  final EdgeInsets? padding;
 
   /// The color of the refresh indicator
   final Color? refreshIndicatorColor;
@@ -161,16 +270,25 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// Whether the grpup should stick to the top of the screen when scrolling up.
   final bool stickyGroups;
 
+  /// Whether the [onLoadMore] uses paging. If it does not, this should be set as [false]
+  ///
+  /// otherwise it will keep on adding the same items to the list.
+  final bool isPaged;
+
   /// The controller of the list.
+  ///
+  /// - Get the items in the list.
+  /// - Retry the last failed load more call.
+  /// - Refresh the list.
   final InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>?
       controller;
 
   @override
-  InfiniteGroupedListState<ItemType, GroupBy, GroupTitle> createState() =>
-      InfiniteGroupedListState();
+  _InfiniteGroupState<ItemType, GroupBy, GroupTitle> createState() =>
+      _InfiniteGroupState();
 }
 
-class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
+class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     extends State<InfiniteGroupedList<ItemType, GroupBy, GroupTitle>> {
   bool loading = true;
   bool hasError = false;
@@ -188,7 +306,7 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
   late List<GroupTitle> groupTitles = groupedItems.keys.toList();
 
   Future<void> _initList() async {
-    if (!loading) {
+    if (!loading && mounted) {
       setState(() {
         loading = true;
         hasError = false;
@@ -213,15 +331,18 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
       groupedItems = groupItems(_allItems);
 
       groupTitles = groupedItems.keys.toList();
-
-      setState(() {
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     } catch (e) {
       hasError = true;
-      setState(() {
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     }
   }
 
@@ -234,9 +355,11 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
     widget.onRefresh?.call();
     stillHasItems = true;
     hasError = false;
-    setState(() {
-      loading = true;
-    });
+    if (mounted) {
+      setState(() {
+        loading = true;
+      });
+    }
     _pageInformationController.currentOffset = 0;
     _pageInformationController.currentPage = 1;
     try {
@@ -259,20 +382,24 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
 
       groupTitles = groupedItems.keys.toList();
 
-      setState(() {
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     } catch (e) {
       hasError = true;
-      setState(() {
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     }
   }
 
   /// Retries the last failed fetch
   Future<void> _retry() async {
-    if (!loading) {
+    if (!loading && mounted) {
       setState(() {
         loading = true;
         hasError = false;
@@ -297,15 +424,18 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
       groupedItems = groupItems(_allItems);
 
       groupTitles = groupedItems.keys.toList();
-
-      setState(() {
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     } catch (e) {
       hasError = true;
-      setState(() {
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     }
   }
 
@@ -322,8 +452,9 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
     _initList();
     _scrollController.addListener(() async {
       if (_scrollController.offset >=
-          _scrollController.position.maxScrollExtent - 100) {
-        if (!loading && stillHasItems && !hasError) {
+              _scrollController.position.maxScrollExtent - 100 &&
+          widget.isPaged) {
+        if (!loading && stillHasItems && !hasError && mounted) {
           setState(() {
             loading = true;
             hasError = false;
@@ -345,23 +476,29 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
 
             if (items.isEmpty) {
               stillHasItems = false;
-              setState(() {
-                loading = false;
-              });
+              if (mounted) {
+                setState(() {
+                  loading = false;
+                });
+              }
               return;
             }
             _allItems.addAll(items);
             groupedItems = groupItems(_allItems);
 
             groupTitles = groupedItems.keys.toList();
-            setState(() {
-              loading = false;
-            });
+            if (mounted) {
+              setState(() {
+                loading = false;
+              });
+            }
           } catch (e) {
             hasError = true;
-            setState(() {
-              loading = false;
-            });
+            if (mounted) {
+              setState(() {
+                loading = false;
+              });
+            }
           }
         }
       }
@@ -410,7 +547,7 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
                                     ),
                                   ),
                         ),
-                      )
+                      ),
                     ],
                   )
                 : CustomScrollView(
@@ -428,20 +565,42 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
                             state.scrollPercentage,
                           );
                         },
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, i) {
-                              final item = groupedItems[title]![i];
-                              return Column(
-                                children: [
-                                  widget.itemBuilder(item),
-                                  widget.seperatorBuilder(item),
-                                ],
-                              );
-                            },
-                            childCount: groupedItems[title]!.length,
-                          ),
-                        ),
+                        sliver: widget.listStyle == ListStyle.listView
+                            ? SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, i) {
+                                    final item = groupedItems[title]![i];
+                                    return Column(
+                                      children: [
+                                        widget.itemBuilder(item),
+                                        if (widget.seperatorBuilder != null)
+                                          widget.seperatorBuilder!(item),
+                                      ],
+                                    );
+                                  },
+                                  childCount: groupedItems[title]!.length,
+                                ),
+                              )
+                            : SliverGrid(
+                                gridDelegate: widget.gridDelegate ??
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 3,
+                                      childAspectRatio: 2,
+                                    ),
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, i) {
+                                    final item = groupedItems[title]![i];
+                                    return Column(
+                                      children: [
+                                        widget.itemBuilder(item),
+                                        if (widget.seperatorBuilder != null)
+                                          widget.seperatorBuilder!(item),
+                                      ],
+                                    );
+                                  },
+                                  childCount: groupedItems[title]!.length,
+                                ),
+                              ),
                       );
                     }).toList()
                       ..addAll([
@@ -484,22 +643,23 @@ class InfiniteGroupedListState<ItemType, GroupBy, GroupTitle>
         groupedItems[groupTitle] = [item];
       }
     }
-
-    groupedItems.forEach((key, value) {
-      if (widget.groupSortOrder == SortOrder.ascending) {
-        value.sort((a, b) {
-          return (widget.sortGroupBy(a) as Comparable?)
-                  ?.compareTo(widget.sortGroupBy(b) as Comparable?) ??
-              0;
-        });
-      } else {
-        value.sort((a, b) {
-          return (widget.sortGroupBy(b) as Comparable?)
-                  ?.compareTo(widget.sortGroupBy(a) as Comparable?) ??
-              0;
-        });
-      }
-    });
+    if (widget.sortGroupBy != null) {
+      groupedItems.forEach((key, value) {
+        if (widget.groupSortOrder == SortOrder.ascending) {
+          value.sort((a, b) {
+            return (widget.sortGroupBy!(a) as Comparable?)
+                    ?.compareTo(widget.sortGroupBy!(b) as Comparable?) ??
+                0;
+          });
+        } else {
+          value.sort((a, b) {
+            return (widget.sortGroupBy!(b) as Comparable?)
+                    ?.compareTo(widget.sortGroupBy!(a) as Comparable?) ??
+                0;
+          });
+        }
+      });
+    }
     return groupedItems;
   }
 }
@@ -523,15 +683,11 @@ class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
   /// Refresh the list.
   late Future<void> Function() refresh;
 
-  InfiniteGroupedListController();
+  InfiniteGroupedListController() {
+    getItems = () => []; // initialize with an empty list by default
+  }
 }
 
-/// This is the controller for the [InfiniteGroupedList].
-///
-/// You can use it to :
-///
-/// * refresh the list
-/// * get the items in the list
 class _InfiniteGroupedListInternalController<ItemType, GroupBy, GroupTitle> {
   // This is the current offset of the list.
   int currentOffset = 0;
