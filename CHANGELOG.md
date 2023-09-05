@@ -1,3 +1,8 @@
+## 1.1.2
+
+- Initializes `getItems` with default empty List to avoid `LateInitializationError`
+- Internal code refactoring
+
 ## 1.1.1
 
 - Internal code refactoring
