@@ -159,11 +159,11 @@ class _MyHomePageState extends State<MyHomePage> {
           subtitle: Text(item.dateTime.toIso8601String()),
         ),
         onLoadMore: (info) => onLoadMore(info.offset),
-        loadMoreItemsErrorWidget: GestureDetector(
-          child: const Text(
-            'Something went wrong,\ntap to retry',
+        loadMoreItemsErrorWidget: (error) => GestureDetector(
+          child: Text(
+            error.toString(),
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
               decoration: TextDecoration.underline,

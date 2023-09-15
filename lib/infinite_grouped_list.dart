@@ -39,8 +39,8 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
     Function()? onRefresh,
     Widget? noItemsFoundWidget,
-    Widget? initialItemsErrorWidget,
-    Widget? loadMoreItemsErrorWidget,
+    Widget Function(dynamic error)? initialItemsErrorWidget,
+    Widget Function(dynamic error)? loadMoreItemsErrorWidget,
     SortOrder groupSortOrder = SortOrder.descending,
     bool stickyGroups = true,
     Widget loadingWidget = const Center(
@@ -48,6 +48,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     ),
     Color? refreshIndicatorColor,
     Color? refreshIndicatorBackgroundColor,
+    ScrollPhysics? physics,
   }) {
     return InfiniteGroupedList._(
       onLoadMore: onLoadMore,
@@ -69,6 +70,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       refreshIndicatorColor: refreshIndicatorColor,
       refreshIndicatorBackgroundColor: refreshIndicatorBackgroundColor,
       listStyle: ListStyle.listView,
+      physics: physics ?? const AlwaysScrollableScrollPhysics(),
     );
   }
 
@@ -91,8 +93,8 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
     Function()? onRefresh,
     Widget? noItemsFoundWidget,
-    Widget? initialItemsErrorWidget,
-    Widget? loadMoreItemsErrorWidget,
+    Widget Function(dynamic error)? initialItemsErrorWidget,
+    Widget Function(dynamic error)? loadMoreItemsErrorWidget,
     SortOrder groupSortOrder = SortOrder.descending,
     bool stickyGroups = true,
     Widget loadingWidget = const Center(
@@ -100,6 +102,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     ),
     Color? refreshIndicatorColor,
     Color? refreshIndicatorBackgroundColor,
+    ScrollPhysics? physics,
   }) {
     return InfiniteGroupedList._(
       onLoadMore: onLoadMore,
@@ -122,6 +125,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       refreshIndicatorBackgroundColor: refreshIndicatorBackgroundColor,
       gridDelegate: gridDelegate,
       listStyle: ListStyle.grid,
+      physics: physics ?? const AlwaysScrollableScrollPhysics(),
     );
   }
 
@@ -162,6 +166,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     this.loadingWidget = const Center(
       child: CircularProgressIndicator(),
     ),
+    this.physics = const AlwaysScrollableScrollPhysics(),
     this.refreshIndicatorColor,
     this.refreshIndicatorBackgroundColor,
     this.gridDelegate,
@@ -240,12 +245,12 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   final Widget? noItemsFoundWidget;
 
   /// The widget to show when the first load call fails
-  final Widget? initialItemsErrorWidget;
+  final Widget Function(dynamic error)? initialItemsErrorWidget;
 
   /// The widget to show when the load call fails.
   ///
   /// This will be shown at the bottom of the list.
-  final Widget? loadMoreItemsErrorWidget;
+  final Widget Function(dynamic error)? loadMoreItemsErrorWidget;
 
   /// Return the field of the item that you want to group by.
   ///
@@ -283,6 +288,11 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   final InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>?
       controller;
 
+  /// The scroll physics of the list.
+  ///
+  /// Defaults to [AlwaysScrollableScrollPhysics]
+  final ScrollPhysics physics;
+
   @override
   _InfiniteGroupState<ItemType, GroupBy, GroupTitle> createState() =>
       _InfiniteGroupState();
@@ -292,6 +302,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     extends State<InfiniteGroupedList<ItemType, GroupBy, GroupTitle>> {
   bool loading = true;
   bool hasError = false;
+  dynamic error;
 
   bool stillHasItems = true;
   final _InfiniteGroupedListInternalController<ItemType, GroupBy, GroupTitle>
@@ -338,6 +349,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
       }
     } catch (e) {
       hasError = true;
+      error = e;
       if (mounted) {
         setState(() {
           loading = false;
@@ -522,11 +534,12 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
             onRefresh: _refresh,
             child: groupTitles.isEmpty
                 ? CustomScrollView(
+                    physics: widget.physics,
                     slivers: [
                       SliverFillRemaining(
                         child: Center(
                           child: hasError
-                              ? widget.initialItemsErrorWidget ??
+                              ? widget.initialItemsErrorWidget?.call(error) ??
                                   const Center(
                                     child: Text(
                                       'Something went wrong while fetching items',
@@ -552,6 +565,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
                   )
                 : CustomScrollView(
                     controller: _scrollController,
+                    physics: widget.physics,
                     slivers: groupTitles.map<Widget>((title) {
                       return SliverStickyHeader.builder(
                         sticky: widget.stickyGroups,
@@ -616,14 +630,15 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
                           ),
                         if (hasError)
                           SliverToBoxAdapter(
-                            child: widget.loadMoreItemsErrorWidget ??
-                                const Text(
-                                  'Oops something went wrong !',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 20,
-                                  ),
-                                ),
+                            child:
+                                widget.loadMoreItemsErrorWidget?.call(error) ??
+                                    const Text(
+                                      'Oops something went wrong !',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 20,
+                                      ),
+                                    ),
                           ),
                       ]),
                   ),

@@ -159,10 +159,10 @@ class _MyHomePageState extends State<MyHomePage> {
           subtitle: Text(item.dateTime.toString()),
         ),
         onLoadMore: (info) => onLoadMore(info.offset),
-        loadMoreItemsErrorWidget: const Text(
-          'Something went wrong,\ntap to retry',
+        loadMoreItemsErrorWidget: (error) => Text(
+          error.toString(),
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w500,
             decoration: TextDecoration.underline,

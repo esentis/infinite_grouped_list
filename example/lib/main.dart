@@ -102,6 +102,19 @@ class _MyHomePageState extends State<MyHomePage> {
         groupBy: (item) => item.dateTime,
         controller: controller,
         sortGroupBy: (item) => item.dateTime,
+        initialItemsErrorWidget: (error) => GestureDetector(
+          child: Text(
+            error.toString(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              decoration: TextDecoration.underline,
+              decorationColor: Colors.blue,
+              color: Colors.blue,
+            ),
+          ),
+        ),
         groupTitleBuilder: (title, groupBy, isPinned, scrollPercentage) =>
             Padding(
           padding: const EdgeInsets.only(bottom: 12.0, top: 12.0),
