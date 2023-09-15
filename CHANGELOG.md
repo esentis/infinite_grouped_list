@@ -1,3 +1,38 @@
+## 1.2.0 💥 Breaking changes
+
+- Tweaks `initialItemsErrorWidget` & `loadMoreItemsErrorWidget` parameters. They are now function that returns a `Widget`, exposing the error aswell :
+
+```dart
+        initialItemsErrorWidget: (error) => GestureDetector(
+          child: Text(
+            error.toString(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              decoration: TextDecoration.underline,
+              decorationColor: Colors.blue,
+              color: Colors.blue,
+            ),
+          ),
+        ),
+        loadMoreItemsErrorWidget: (error) => GestureDetector(
+          child: Text(
+            error.toString(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              decoration: TextDecoration.underline,
+              decorationColor: Colors.blue,
+              color: Colors.blue,
+            ),
+          ),
+        ),
+```
+
+- Adds `physics` parameter. Defaults to [AlwaysScrollablePhysics]
+
 ## 1.1.2
 
 - Initializes `getItems` with default empty List to avoid `LateInitializationError`
