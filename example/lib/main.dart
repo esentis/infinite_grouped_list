@@ -144,6 +144,9 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
         itemBuilder: (item) => ListTile(
+          onTap: () {
+            controller.remove(item);
+          },
           title: Text(item.name),
           leading: item.type == TransactionType.transport
               ? const Icon(Icons.directions_bus)
