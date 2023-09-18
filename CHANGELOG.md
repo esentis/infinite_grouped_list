@@ -1,3 +1,7 @@
+## 1.2.1 New Features
+
+- Adds `remove(ItemType)` method to the controller. You can now programmatically remove items from the list.
+
 ## 1.2.0 💥 Breaking changes
 
 - Tweaks `initialItemsErrorWidget` & `loadMoreItemsErrorWidget` parameters. They are now function that returns a `Widget`, exposing the error aswell :
