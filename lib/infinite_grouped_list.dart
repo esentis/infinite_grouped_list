@@ -459,6 +459,14 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
       widget.controller!.getItems = _items;
       widget.controller!.refresh = _refresh;
       widget.controller!.loadItems = _retry;
+      widget.controller!.remove = (item) {
+        _allItems.remove(item);
+        groupedItems = groupItems(_allItems);
+        groupTitles = groupedItems.keys.toList();
+        if (mounted) {
+          setState(() {});
+        }
+      };
     }
 
     _initList();
@@ -697,6 +705,8 @@ class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
 
   /// Refresh the list.
   late Future<void> Function() refresh;
+
+  late Function(ItemType item) remove;
 
   InfiniteGroupedListController() {
     getItems = () => []; // initialize with an empty list by default
