@@ -49,6 +49,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     Color? refreshIndicatorColor,
     Color? refreshIndicatorBackgroundColor,
     ScrollPhysics? physics,
+    Key? key,
   }) {
     return InfiniteGroupedList._(
       onLoadMore: onLoadMore,
@@ -71,6 +72,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       refreshIndicatorBackgroundColor: refreshIndicatorBackgroundColor,
       listStyle: ListStyle.listView,
       physics: physics ?? const AlwaysScrollableScrollPhysics(),
+      key: key,
     );
   }
 
@@ -103,6 +105,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     Color? refreshIndicatorColor,
     Color? refreshIndicatorBackgroundColor,
     ScrollPhysics? physics,
+    Key? key,
   }) {
     return InfiniteGroupedList._(
       onLoadMore: onLoadMore,
@@ -126,6 +129,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       gridDelegate: gridDelegate,
       listStyle: ListStyle.grid,
       physics: physics ?? const AlwaysScrollableScrollPhysics(),
+      key: key,
     );
   }
 
@@ -448,6 +452,26 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
           loading = false;
         });
       }
+    }
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant InfiniteGroupedList<ItemType, GroupBy, GroupTitle> oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != null) {
+      widget.controller!.getItems = _items;
+      widget.controller!.refresh = _refresh;
+      widget.controller!.loadItems = _retry;
+      widget.controller!.remove = (item) {
+        _allItems.remove(item);
+        groupedItems = groupItems(_allItems);
+        groupTitles = groupedItems.keys.toList();
+        if (mounted) {
+          setState(() {});
+        }
+      };
     }
   }
 
