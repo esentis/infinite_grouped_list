@@ -1,3 +1,7 @@
+## 1.2.4 🐛 Bug fixes
+
+- Adds missing `showRefreshIndicator` from default constructor
+
 ## 1.2.3 ✨ New Features
 
 - Adds `showRefreshIndicator` flag which defaults to `true`

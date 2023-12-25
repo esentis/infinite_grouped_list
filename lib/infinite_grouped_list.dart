@@ -50,6 +50,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     Color? refreshIndicatorColor,
     Color? refreshIndicatorBackgroundColor,
     ScrollPhysics? physics,
+    bool? showRefreshIndicator,
     Key? key,
   }) {
     return InfiniteGroupedList._(
@@ -73,6 +74,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       refreshIndicatorBackgroundColor: refreshIndicatorBackgroundColor,
       listStyle: ListStyle.listView,
       physics: physics ?? const AlwaysScrollableScrollPhysics(),
+      showRefreshIndicator: showRefreshIndicator ?? true,
       key: key,
     );
   }
