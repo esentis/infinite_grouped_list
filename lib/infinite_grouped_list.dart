@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
+import 'package:infinite_grouped_list/helpers/empty_list.dart';
 import 'package:infinite_grouped_list/helpers/enums.dart';
 import 'package:infinite_grouped_list/helpers/pagination_info.dart';
 
@@ -105,6 +106,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     Color? refreshIndicatorColor,
     Color? refreshIndicatorBackgroundColor,
     ScrollPhysics? physics,
+    bool? showRefreshIndicator,
     Key? key,
   }) {
     return InfiniteGroupedList._(
@@ -129,6 +131,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       gridDelegate: gridDelegate,
       listStyle: ListStyle.grid,
       physics: physics ?? const AlwaysScrollableScrollPhysics(),
+      showRefreshIndicator: showRefreshIndicator ?? true,
       key: key,
     );
   }
@@ -174,6 +177,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     this.refreshIndicatorColor,
     this.refreshIndicatorBackgroundColor,
     this.gridDelegate,
+    this.showRefreshIndicator = true,
     super.key,
   });
 
@@ -296,6 +300,9 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   ///
   /// Defaults to [AlwaysScrollableScrollPhysics]
   final ScrollPhysics physics;
+
+  /// Whether to show the refresh indicator when the user pulls to refresh. Defaults to true.
+  final bool showRefreshIndicator;
 
   @override
   _InfiniteGroupState<ItemType, GroupBy, GroupTitle> createState() =>
@@ -456,26 +463,6 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   }
 
   @override
-  void didUpdateWidget(
-    covariant InfiniteGroupedList<ItemType, GroupBy, GroupTitle> oldWidget,
-  ) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.controller != null) {
-      widget.controller!.getItems = _items;
-      widget.controller!.refresh = _refresh;
-      widget.controller!.loadItems = _retry;
-      widget.controller!.remove = (item) {
-        _allItems.remove(item);
-        groupedItems = groupItems(_allItems);
-        groupTitles = groupedItems.keys.toList();
-        if (mounted) {
-          setState(() {});
-        }
-      };
-    }
-  }
-
-  @override
   void initState() {
     super.initState();
 
@@ -549,6 +536,87 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     });
   }
 
+  CustomScrollView _buildList() {
+    return CustomScrollView(
+      controller: _scrollController,
+      physics: widget.physics,
+      slivers: groupTitles.map<Widget>((title) {
+        return SliverStickyHeader.builder(
+          sticky: widget.stickyGroups,
+          builder: (context, state) {
+            return widget.groupTitleBuilder(
+              title,
+              widget.groupBy(
+                groupedItems[title]!.first,
+              ),
+              state.isPinned,
+              state.scrollPercentage,
+            );
+          },
+          sliver: widget.listStyle == ListStyle.listView
+              ? SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) {
+                      final item = groupedItems[title]![i];
+                      return Column(
+                        children: [
+                          widget.itemBuilder(item),
+                          if (widget.seperatorBuilder != null)
+                            widget.seperatorBuilder!(item),
+                        ],
+                      );
+                    },
+                    childCount: groupedItems[title]!.length,
+                  ),
+                )
+              : SliverGrid(
+                  gridDelegate: widget.gridDelegate ??
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        childAspectRatio: 2,
+                      ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) {
+                      final item = groupedItems[title]![i];
+                      return Column(
+                        children: [
+                          widget.itemBuilder(item),
+                          if (widget.seperatorBuilder != null)
+                            widget.seperatorBuilder!(item),
+                        ],
+                      );
+                    },
+                    childCount: groupedItems[title]!.length,
+                  ),
+                ),
+        );
+      }).toList()
+        ..addAll([
+          if (loading)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  bottom: 14.0,
+                  top: 5.0,
+                ),
+                child: widget.loadingWidget,
+              ),
+            ),
+          if (hasError)
+            SliverToBoxAdapter(
+              child: widget.loadMoreItemsErrorWidget?.call(error) ??
+                  const Text(
+                    'Oops something went wrong !',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                    ),
+                  ),
+            ),
+        ]),
+    );
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -560,121 +628,26 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   Widget build(BuildContext context) {
     return loading && _allItems.isEmpty
         ? widget.loadingWidget
-        : RefreshIndicator(
-            color: widget.refreshIndicatorColor,
-            backgroundColor: widget.refreshIndicatorBackgroundColor,
-            onRefresh: _refresh,
-            child: groupTitles.isEmpty
-                ? CustomScrollView(
-                    physics: widget.physics,
-                    slivers: [
-                      SliverFillRemaining(
-                        child: Center(
-                          child: hasError
-                              ? widget.initialItemsErrorWidget?.call(error) ??
-                                  const Center(
-                                    child: Text(
-                                      'Something went wrong while fetching items',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 20,
-                                      ),
-                                    ),
-                                  )
-                              : widget.noItemsFoundWidget ??
-                                  const Text(
-                                    'No items found',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                        ),
-                      ),
-                    ],
+        : widget.showRefreshIndicator
+            ? RefreshIndicator(
+                color: widget.refreshIndicatorColor,
+                backgroundColor: widget.refreshIndicatorBackgroundColor,
+                onRefresh: _refresh,
+                child: groupTitles.isEmpty
+                    ? EmptyList(
+                        widget: widget,
+                        hasError: hasError,
+                        error: error,
+                      )
+                    : _buildList(),
+              )
+            : groupTitles.isEmpty
+                ? EmptyList(
+                    widget: widget,
+                    hasError: hasError,
+                    error: error,
                   )
-                : CustomScrollView(
-                    controller: _scrollController,
-                    physics: widget.physics,
-                    slivers: groupTitles.map<Widget>((title) {
-                      return SliverStickyHeader.builder(
-                        sticky: widget.stickyGroups,
-                        builder: (context, state) {
-                          return widget.groupTitleBuilder(
-                            title,
-                            widget.groupBy(
-                              groupedItems[title]!.first,
-                            ),
-                            state.isPinned,
-                            state.scrollPercentage,
-                          );
-                        },
-                        sliver: widget.listStyle == ListStyle.listView
-                            ? SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, i) {
-                                    final item = groupedItems[title]![i];
-                                    return Column(
-                                      children: [
-                                        widget.itemBuilder(item),
-                                        if (widget.seperatorBuilder != null)
-                                          widget.seperatorBuilder!(item),
-                                      ],
-                                    );
-                                  },
-                                  childCount: groupedItems[title]!.length,
-                                ),
-                              )
-                            : SliverGrid(
-                                gridDelegate: widget.gridDelegate ??
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 3,
-                                      childAspectRatio: 2,
-                                    ),
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, i) {
-                                    final item = groupedItems[title]![i];
-                                    return Column(
-                                      children: [
-                                        widget.itemBuilder(item),
-                                        if (widget.seperatorBuilder != null)
-                                          widget.seperatorBuilder!(item),
-                                      ],
-                                    );
-                                  },
-                                  childCount: groupedItems[title]!.length,
-                                ),
-                              ),
-                      );
-                    }).toList()
-                      ..addAll([
-                        if (loading)
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: 14.0,
-                                top: 5.0,
-                              ),
-                              child: widget.loadingWidget,
-                            ),
-                          ),
-                        if (hasError)
-                          SliverToBoxAdapter(
-                            child:
-                                widget.loadMoreItemsErrorWidget?.call(error) ??
-                                    const Text(
-                                      'Oops something went wrong !',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 20,
-                                      ),
-                                    ),
-                          ),
-                      ]),
-                  ),
-          );
+                : _buildList();
   }
 
   /// Function to group items based on [GroupBy]

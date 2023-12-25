@@ -1,3 +1,7 @@
+## 1.2.3 ✨ New Features
+
+- Adds `showRefreshIndicator` flag which defaults to `true`
+
 ## 1.2.2 ✨ New Features
 
 - Adds missing `Key`
