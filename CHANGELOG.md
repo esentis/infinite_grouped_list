@@ -1,4 +1,8 @@
-## 1.2.1 New Features
+## 1.2.2 ✨ New Features
+
+- Adds missing `Key`
+
+## 1.2.1 ✨ New Features
 
 - Adds `remove(ItemType)` method to the controller. You can now programmatically remove items from the list.
 
