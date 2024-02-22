@@ -1,3 +1,7 @@
+## 1.2.5 ♻️ Refactoring
+
+- Refactors `InfiniteGroupedListController` to avoid `LateInitializationErrors`
+
 ## 1.2.4 🐛 Bug fixes
 
 - Adds missing `showRefreshIndicator` from default constructor
