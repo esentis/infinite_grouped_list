@@ -62,7 +62,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       sortGroupBy: sortGroupBy,
       seperatorBuilder: seperatorBuilder,
       isPaged: isPaged,
-      controller: controller,
+      controller: controller ?? InfiniteGroupedListController(),
       onRefresh: onRefresh,
       noItemsFoundWidget: noItemsFoundWidget,
       initialItemsErrorWidget: initialItemsErrorWidget,
@@ -120,7 +120,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       sortGroupBy: sortGroupBy,
       seperatorBuilder: seperatorBuilder,
       isPaged: isPaged,
-      controller: controller,
+      controller: controller ?? InfiniteGroupedListController(),
       onRefresh: onRefresh,
       noItemsFoundWidget: noItemsFoundWidget,
       initialItemsErrorWidget: initialItemsErrorWidget,
@@ -162,10 +162,10 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     required this.groupBy,
     required this.groupCreator,
     required this.listStyle,
+    required this.controller,
     this.sortGroupBy,
     this.seperatorBuilder,
     this.isPaged = true,
-    this.controller,
     this.onRefresh,
     this.noItemsFoundWidget,
     this.initialItemsErrorWidget,
@@ -295,8 +295,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// - Get the items in the list.
   /// - Retry the last failed load more call.
   /// - Refresh the list.
-  final InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>?
-      controller;
+  final InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> controller;
 
   /// The scroll physics of the list.
   ///
@@ -467,20 +466,17 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   @override
   void initState() {
     super.initState();
-
-    if (widget.controller != null) {
-      widget.controller!.getItems = _items;
-      widget.controller!.refresh = _refresh;
-      widget.controller!.loadItems = _retry;
-      widget.controller!.remove = (item) {
-        _allItems.remove(item);
-        groupedItems = groupItems(_allItems);
-        groupTitles = groupedItems.keys.toList();
-        if (mounted) {
-          setState(() {});
-        }
-      };
-    }
+    widget.controller.getItemsCallback = _items;
+    widget.controller.refreshCallback = _refresh;
+    widget.controller.loadItemsCallback = _retry;
+    widget.controller.removeCallback = (item) {
+      _allItems.remove(item);
+      groupedItems = groupItems(_allItems);
+      groupTitles = groupedItems.keys.toList();
+      if (mounted) {
+        setState(() {});
+      }
+    };
 
     _initList();
     _scrollController.addListener(() async {
@@ -694,21 +690,34 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 /// 2. Retry the last failed load more call.
 /// 3. Refresh the list.
 class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
+  List<ItemType> Function()? getItemsCallback;
+
+  Future<void> Function()? loadItemsCallback;
+
+  Future<void> Function()? refreshCallback;
+
+  void Function(ItemType item)? removeCallback;
+
   /// Call this function to get the items in the list.
-  late List<ItemType> Function() getItems;
+  List<ItemType> getItems() {
+    return getItemsCallback?.call() ?? <ItemType>[];
+  }
 
   /// Call this function to programmatically fetch the next page
   ///
   /// If the last call was failed then it will retry the last call.
-  late Future<void> Function() loadItems;
+  Future<void> loadItems() async {
+    loadItemsCallback?.call();
+  }
 
   /// Refresh the list.
-  late Future<void> Function() refresh;
+  Future<void> refresh() {
+    return refreshCallback?.call() ?? Future.value();
+  }
 
-  late Function(ItemType item) remove;
-
-  InfiniteGroupedListController() {
-    getItems = () => []; // initialize with an empty list by default
+  /// Remove an item from the list.
+  void remove(ItemType item) {
+    removeCallback?.call(item);
   }
 }
 
