@@ -736,7 +736,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
   /// The constructor for the controller.
   InfiniteGroupedListController({
-    this.limit = 10,
+    this.limit = 20,
   });
 
   List<ItemType> Function()? getItemsCallback;

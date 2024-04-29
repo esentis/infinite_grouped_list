@@ -1,3 +1,8 @@
+## 1.2.6 ✨ New Features
+
+- Adds a new `limit` parameter in `InfiniteGroupedListController` to tell the library how much items are expected from the remote call
+- Adds a callback `onNoMoreItemsFound` that is triggered when the response returns less items than the provided `limit`
+
 ## 1.2.5 ♻️ Refactoring
 
 - Refactors `InfiniteGroupedListController` to avoid `LateInitializationErrors`
