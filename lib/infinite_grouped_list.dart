@@ -31,9 +31,10 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       bool isPinned,
       double scrollPercentage,
     ) groupTitleBuilder,
+    required GroupTitle Function(GroupBy) groupCreator,
+    bool? showGroups,
     required Future<List<ItemType>> Function(PaginationInfo paginationInfo)
         onLoadMore,
-    required GroupTitle Function(GroupBy) groupCreator,
     Function(ItemType)? sortGroupBy,
     Widget Function(ItemType)? seperatorBuilder,
     bool isPaged = true,
@@ -52,6 +53,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     ScrollPhysics? physics,
     bool? showRefreshIndicator,
     Key? key,
+    VoidCallback? onNoMoreItemsFound,
   }) {
     return InfiniteGroupedList._(
       onLoadMore: onLoadMore,
@@ -76,6 +78,8 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       physics: physics ?? const AlwaysScrollableScrollPhysics(),
       showRefreshIndicator: showRefreshIndicator ?? true,
       key: key,
+      onNoMoreItemsFound: onNoMoreItemsFound,
+      showGroups: showGroups ?? true,
     );
   }
 
@@ -109,7 +113,9 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     Color? refreshIndicatorBackgroundColor,
     ScrollPhysics? physics,
     bool? showRefreshIndicator,
+    VoidCallback? onNoMoreItemsFound,
     Key? key,
+    bool? showGroups,
   }) {
     return InfiniteGroupedList._(
       onLoadMore: onLoadMore,
@@ -134,6 +140,8 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       listStyle: ListStyle.grid,
       physics: physics ?? const AlwaysScrollableScrollPhysics(),
       showRefreshIndicator: showRefreshIndicator ?? true,
+      onNoMoreItemsFound: onNoMoreItemsFound,
+      showGroups: showGroups ?? true,
       key: key,
     );
   }
@@ -163,6 +171,8 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     required this.groupCreator,
     required this.listStyle,
     required this.controller,
+    this.showGroups = true,
+    this.onNoMoreItemsFound,
     this.sortGroupBy,
     this.seperatorBuilder,
     this.isPaged = true,
@@ -232,6 +242,9 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// Optionally if you want to do something when the user pulls to refresh.
   final VoidCallback? onRefresh;
 
+  /// Optionally if you want to do something when there are no more items to load.
+  final VoidCallback? onNoMoreItemsFound;
+
   /// The group title builder is used to build the title of the group.
   ///
   /// The first parameter is the title of the group as created from [groupCreator], the second parameter is the [groupBy] value.
@@ -290,6 +303,8 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// otherwise it will keep on adding the same items to the list.
   final bool isPaged;
 
+  final bool showGroups;
+
   /// The controller of the list.
   ///
   /// - Get the items in the list.
@@ -314,9 +329,9 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     extends State<InfiniteGroupedList<ItemType, GroupBy, GroupTitle>> {
   bool loading = true;
   bool hasError = false;
+  bool noMoreItemsToLoad = false;
   dynamic error;
 
-  bool stillHasItems = true;
   final _InfiniteGroupedListInternalController<ItemType, GroupBy, GroupTitle>
       _pageInformationController = _InfiniteGroupedListInternalController();
 
@@ -340,6 +355,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
         PaginationInfo(
           offset: _pageInformationController.currentOffset,
           page: _pageInformationController.currentPage,
+          limit: widget.controller.limit,
         ),
       );
 
@@ -377,7 +393,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   Future<void> _refresh() async {
     _allItems.clear();
     widget.onRefresh?.call();
-    stillHasItems = true;
+    noMoreItemsToLoad = false;
     hasError = false;
     if (mounted) {
       setState(() {
@@ -387,13 +403,21 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     _pageInformationController.currentOffset = 0;
     _pageInformationController.currentPage = 1;
     try {
+      if (noMoreItemsToLoad) {
+        return;
+      }
       final items = await widget.onLoadMore(
         PaginationInfo(
           offset: _pageInformationController.currentOffset,
           page: _pageInformationController.currentPage,
+          limit: widget.controller.limit,
         ),
       );
 
+      if (items.length < widget.controller.limit) {
+        noMoreItemsToLoad = true;
+        widget.onNoMoreItemsFound?.call();
+      }
       // Increment the offset after a successful fetch
       _pageInformationController.incrementOffset(items.length);
 
@@ -430,12 +454,21 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
       });
     }
     try {
+      if (noMoreItemsToLoad) {
+        return;
+      }
       final items = await widget.onLoadMore(
         PaginationInfo(
           offset: _pageInformationController.currentOffset,
           page: _pageInformationController.currentPage,
+          limit: widget.controller.limit,
         ),
       );
+
+      if (items.length < widget.controller.limit) {
+        noMoreItemsToLoad = true;
+        widget.onNoMoreItemsFound?.call();
+      }
 
       // Increment the offset after a successful fetch
       _pageInformationController.incrementOffset(items.length);
@@ -483,20 +516,28 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
       if (_scrollController.offset >=
               _scrollController.position.maxScrollExtent - 100 &&
           widget.isPaged) {
-        if (!loading && stillHasItems && !hasError && mounted) {
+        if (!loading && !noMoreItemsToLoad && !hasError && mounted) {
           setState(() {
             loading = true;
             hasError = false;
           });
-          List<ItemType> items = [];
+
           try {
-            items = await widget.onLoadMore(
+            if (noMoreItemsToLoad) {
+              return;
+            }
+            final items = await widget.onLoadMore(
               PaginationInfo(
                 offset: _pageInformationController.currentOffset,
                 page: _pageInformationController.currentPage,
+                limit: widget.controller.limit,
               ),
             );
 
+            if (items.length < widget.controller.limit) {
+              noMoreItemsToLoad = true;
+              widget.onNoMoreItemsFound?.call();
+            }
             // Increment the offset after a successful fetch
             _pageInformationController.incrementOffset(items.length);
 
@@ -504,7 +545,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
             _pageInformationController.incrementPage();
 
             if (items.isEmpty) {
-              stillHasItems = false;
+              noMoreItemsToLoad = true;
               if (mounted) {
                 setState(() {
                   loading = false;
@@ -542,6 +583,9 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
         return SliverStickyHeader.builder(
           sticky: widget.stickyGroups,
           builder: (context, state) {
+            if (!widget.showGroups) {
+              return const SizedBox.shrink();
+            }
             return widget.groupTitleBuilder(
               title,
               widget.groupBy(
@@ -690,6 +734,11 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 /// 2. Retry the last failed load more call.
 /// 3. Refresh the list.
 class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
+  /// The constructor for the controller.
+  InfiniteGroupedListController({
+    this.limit = 10,
+  });
+
   List<ItemType> Function()? getItemsCallback;
 
   Future<void> Function()? loadItemsCallback;
@@ -697,6 +746,9 @@ class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
   Future<void> Function()? refreshCallback;
 
   void Function(ItemType item)? removeCallback;
+
+  /// The limit of items to fetch in a single call.
+  int limit;
 
   /// Call this function to get the items in the list.
   List<ItemType> getItems() {
