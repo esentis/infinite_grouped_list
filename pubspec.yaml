@@ -7,7 +7,6 @@ topics:
   - grouped_list
   - infinite_grouped_list
   - widget
-  - flutter
 screenshots:
   - description: "Infinite Grouped List with sticky headers"
     path: "screenshots/sticky_infinite.gif"
