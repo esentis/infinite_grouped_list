@@ -496,13 +496,39 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     }
   }
 
+  /// Function to remove items from the list.
+  Future<void> _removeWhere(bool Function(ItemType) predicate) async {
+    _allItems.removeWhere(predicate);
+    groupedItems = groupItems(_allItems);
+    groupTitles = groupedItems.keys.toList();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  /// Function to add items to the list.
+  Future<void> _addItems(List<ItemType> items, {int? index}) async {
+    if (index != null) {
+      _allItems.insertAll(index, items);
+    } else {
+      _allItems.addAll(items);
+    }
+    groupedItems = groupItems(_allItems);
+    groupTitles = groupedItems.keys.toList();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    widget.controller.getItemsCallback = _items;
-    widget.controller.refreshCallback = _refresh;
-    widget.controller.loadItemsCallback = _retry;
-    widget.controller.removeCallback = (item) {
+    widget.controller._getItemsCallback = _items;
+    widget.controller._refreshCallback = _refresh;
+    widget.controller._loadItemsCallback = _retry;
+    widget.controller._addItemsCallback = _addItems;
+    widget.controller._removeWhereCallback = _removeWhere;
+    widget.controller._removeCallback = (item) {
       _allItems.remove(item);
       groupedItems = groupItems(_allItems);
       groupTitles = groupedItems.keys.toList();
@@ -739,37 +765,53 @@ class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
     this.limit = 20,
   });
 
-  List<ItemType> Function()? getItemsCallback;
+  List<ItemType> Function()? _getItemsCallback;
 
-  Future<void> Function()? loadItemsCallback;
+  Future<void> Function()? _loadItemsCallback;
 
-  Future<void> Function()? refreshCallback;
+  Future<void> Function()? _refreshCallback;
 
-  void Function(ItemType item)? removeCallback;
+  void Function(ItemType item)? _removeCallback;
+
+  void Function(List<ItemType> items, {int? index})? _addItemsCallback;
+
+  void Function(bool Function(ItemType) predicate)? _removeWhereCallback;
 
   /// The limit of items to fetch in a single call.
   int limit;
 
   /// Call this function to get the items in the list.
   List<ItemType> getItems() {
-    return getItemsCallback?.call() ?? <ItemType>[];
+    return _getItemsCallback?.call() ?? <ItemType>[];
   }
 
   /// Call this function to programmatically fetch the next page
   ///
   /// If the last call was failed then it will retry the last call.
   Future<void> loadItems() async {
-    loadItemsCallback?.call();
+    _loadItemsCallback?.call();
   }
 
   /// Refresh the list.
   Future<void> refresh() {
-    return refreshCallback?.call() ?? Future.value();
+    return _refreshCallback?.call() ?? Future.value();
   }
 
   /// Remove an item from the list.
   void remove(ItemType item) {
-    removeCallback?.call(item);
+    _removeCallback?.call(item);
+  }
+
+  /// Add items to the list.
+  /// If index is provided, the items will be added at that index.
+  void addItems(List<ItemType> items, {int? index}) {
+    _addItemsCallback?.call(items, index: index);
+  }
+
+  /// Remove items from the list based on a predicate.
+  /// The predicate should return true for items that should be removed.
+  void removeWhere(bool Function(ItemType) predicate) {
+    _removeWhereCallback?.call(predicate);
   }
 }
 
