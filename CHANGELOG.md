@@ -1,3 +1,9 @@
+## 1.2.7 ✨ New Features
+
+- Adds `addItems` method in `InfiniteGroupedListController`
+- Adds `removeWhere` method in `InfiniteGroupedListController`
+- Hides internal methods in `InfiniteGroupedListController`
+
 ## 1.2.6 ✨ New Features
 
 - Adds a new `limit` parameter in `InfiniteGroupedListController` to tell the library how much items are expected from the remote call
