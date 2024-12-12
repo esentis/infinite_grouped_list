@@ -1,3 +1,7 @@
+## 1.2.8 🐛 Bug fixes
+
+- Fixes hashValues deprecated issues
+
 ## 1.2.7 ✨ New Features
 
 - Adds `addItems` method in `InfiniteGroupedListController`
