@@ -110,7 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        shadowColor: Colors.grey.withOpacity(0.2),
+        shadowColor: Colors.grey.withValues(alpha: 0.2),
         title: const Text('Infinite Grouped List'),
         backgroundColor: Colors.white,
         centerTitle: true,
