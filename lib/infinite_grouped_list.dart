@@ -62,7 +62,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       groupBy: groupBy,
       groupCreator: groupCreator,
       sortGroupBy: sortGroupBy,
-      seperatorBuilder: seperatorBuilder,
+      separatorBuilder: seperatorBuilder,
       isPaged: isPaged,
       controller: controller ?? InfiniteGroupedListController(),
       onRefresh: onRefresh,
@@ -124,7 +124,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       groupBy: groupBy,
       groupCreator: groupCreator,
       sortGroupBy: sortGroupBy,
-      seperatorBuilder: seperatorBuilder,
+      separatorBuilder: seperatorBuilder,
       isPaged: isPaged,
       controller: controller ?? InfiniteGroupedListController(),
       onRefresh: onRefresh,
@@ -150,9 +150,9 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   ///
   /// This requires several callback parameters:
   /// * [onLoadMore]: Fetches more items to be added to the list. This function is
-  ///   expected to return a Future that completes with a List<ItemType>.
+  ///   expected to return a Future that completes with a List
   /// * [itemBuilder]: Builds the widget for each item in the list.
-  /// * [seperatorBuilder]: Builds the separator widget between items.
+  /// * [separatorBuilder]: Builds the separator widget between items.
   /// * [groupTitleBuilder]: Builds the widget for the title of each group.
   /// * [groupBy]: Determines the GroupBy value for each item.
   /// * [groupCreator]: Determines the GroupTitle for each group.
@@ -174,7 +174,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     this.showGroups = true,
     this.onNoMoreItemsFound,
     this.sortGroupBy,
-    this.seperatorBuilder,
+    this.separatorBuilder,
     this.isPaged = true,
     this.onRefresh,
     this.noItemsFoundWidget,
@@ -237,7 +237,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   final Widget Function(ItemType item) itemBuilder;
 
   /// The seperator builder is used to build the seperator between items.
-  final Widget Function(ItemType item)? seperatorBuilder;
+  final Widget Function(ItemType item)? separatorBuilder;
 
   /// Optionally if you want to do something when the user pulls to refresh.
   final VoidCallback? onRefresh;
@@ -361,15 +361,14 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 
       // Increment the offset after a successful fetch
       _pageInformationController.incrementOffset(items.length);
-
-      // Increment the page after a successful fetch
       _pageInformationController.incrementPage();
 
+      // Add items to main list
       _allItems.addAll(items);
 
-      groupedItems = groupItems(_allItems);
+      // Create initial groups from items
+      _createInitialGroups(items);
 
-      groupTitles = groupedItems.keys.toList();
       if (mounted) {
         setState(() {
           loading = false;
@@ -418,17 +417,16 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
         noMoreItemsToLoad = true;
         widget.onNoMoreItemsFound?.call();
       }
+
       // Increment the offset after a successful fetch
       _pageInformationController.incrementOffset(items.length);
-
-      // Increment the page after a successful fetch
       _pageInformationController.incrementPage();
 
+      // Add items to main list
       _allItems.addAll(items);
 
-      groupedItems = groupItems(_allItems);
-
-      groupTitles = groupedItems.keys.toList();
+      // Create initial groups from items
+      _createInitialGroups(items);
 
       if (mounted) {
         setState(() {
@@ -472,15 +470,11 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 
       // Increment the offset after a successful fetch
       _pageInformationController.incrementOffset(items.length);
-
-      // Increment the page after a successful fetch
       _pageInformationController.incrementPage();
 
-      _allItems.addAll(items);
+      // Add items to groups using helper method
+      _addItemsToGroups(items);
 
-      groupedItems = groupItems(_allItems);
-
-      groupTitles = groupedItems.keys.toList();
       if (mounted) {
         setState(() {
           loading = false;
@@ -498,26 +492,185 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 
   /// Function to remove items from the list.
   Future<void> _removeWhere(bool Function(ItemType) predicate) async {
-    _allItems.removeWhere(predicate);
-    groupedItems = groupItems(_allItems);
-    groupTitles = groupedItems.keys.toList();
-    if (mounted) {
-      setState(() {});
+    // _allItems.removeWhere(predicate);
+    // groupedItems = groupItems(_allItems);
+    // groupTitles = groupedItems.keys.toList();
+    // if (mounted) {
+    //   setState(() {});
+    // }
+    // Track which groups had items removed
+    final Set<GroupTitle> affectedGroups = {};
+    final Set<GroupTitle> emptyGroups = {};
+
+    // Process each group
+    for (final groupTitle in groupTitles) {
+      final List<ItemType> group = groupedItems[groupTitle]!;
+      final int originalCount = group.length;
+
+      group.removeWhere(predicate);
+
+      if (group.length != originalCount) {
+        affectedGroups.add(groupTitle);
+        if (group.isEmpty) {
+          emptyGroups.add(groupTitle);
+        }
+      }
     }
+
+    // Remove empty groups
+    for (final groupTitle in emptyGroups) {
+      groupedItems.remove(groupTitle);
+    }
+
+    // Update all items list
+    _allItems.removeWhere(predicate);
+
+    // Only update group titles if groups were removed
+    if (emptyGroups.isNotEmpty) {
+      groupTitles = groupedItems.keys.toList();
+    }
+
+    if (mounted) setState(() {});
   }
 
   /// Function to add items to the list.
   Future<void> _addItems(List<ItemType> items, {int? index}) async {
-    if (index != null) {
-      _allItems.insertAll(index, items);
+    // if (index != null) {
+    //   _allItems.insertAll(index, items);
+    // } else {
+    //   _allItems.addAll(items);
+    // }
+    // groupedItems = groupItems(_allItems);
+    // groupTitles = groupedItems.keys.toList();
+    // if (mounted) {
+    //   setState(() {});
+    // }
+
+    // 1. Group new items by their group title
+    final Map<GroupTitle, List<ItemType>> newItemsByGroup = {};
+    for (final item in items) {
+      final groupTitle = widget.groupCreator(widget.groupBy(item));
+      newItemsByGroup.putIfAbsent(groupTitle, () => []).add(item);
+    }
+
+    // 2. Update existing groups or create new ones
+    bool newGroupAdded = false;
+    for (final entry in newItemsByGroup.entries) {
+      if (groupedItems.containsKey(entry.key)) {
+        // Add to existing group
+        groupedItems[entry.key]!.addAll(entry.value);
+        if (widget.sortGroupBy != null) {
+          // Only sort the specific group that changed
+          _sortSingleGroup(entry.key);
+        }
+      } else {
+        // Create new group
+        groupedItems[entry.key] = entry.value;
+        newGroupAdded = true;
+      }
+    }
+
+    // 3. Only update group titles if a new group was added
+    if (newGroupAdded) {
+      groupTitles = groupedItems.keys.toList();
+    }
+
+    // 4. Add all items to main list
+    _allItems.addAll(items);
+
+    if (mounted) setState(() {});
+  }
+
+  /// Sorts a single group by the sortGroupBy function
+  void _sortSingleGroup(GroupTitle groupTitle) {
+    if (widget.sortGroupBy == null || !groupedItems.containsKey(groupTitle)) {
+      return;
+    }
+
+    final List<ItemType> group = groupedItems[groupTitle]!;
+
+    if (widget.groupSortOrder == SortOrder.ascending) {
+      group.sort((a, b) {
+        return (widget.sortGroupBy!(a) as Comparable?)
+                ?.compareTo(widget.sortGroupBy!(b) as Comparable?) ??
+            0;
+      });
     } else {
-      _allItems.addAll(items);
+      group.sort((a, b) {
+        return (widget.sortGroupBy!(b) as Comparable?)
+                ?.compareTo(widget.sortGroupBy!(a) as Comparable?) ??
+            0;
+      });
     }
-    groupedItems = groupItems(_allItems);
-    groupTitles = groupedItems.keys.toList();
-    if (mounted) {
-      setState(() {});
+  }
+
+  /// Helper method to efficiently add items to existing groups
+  void _addItemsToGroups(List<ItemType> items) {
+    // Group new items by their group title
+    final Map<GroupTitle, List<ItemType>> newItemsByGroup = {};
+    for (final item in items) {
+      final groupTitle = widget.groupCreator(widget.groupBy(item));
+      newItemsByGroup.putIfAbsent(groupTitle, () => []).add(item);
     }
+
+    // Update existing groups or create new ones
+    bool newGroupAdded = false;
+    for (final entry in newItemsByGroup.entries) {
+      if (groupedItems.containsKey(entry.key)) {
+        // Add to existing group
+        groupedItems[entry.key]!.addAll(entry.value);
+        if (widget.sortGroupBy != null) {
+          // Only sort the specific group that changed
+          _sortSingleGroup(entry.key);
+        }
+      } else {
+        // Create new group
+        groupedItems[entry.key] = entry.value;
+        newGroupAdded = true;
+      }
+    }
+
+    // Only update group titles if a new group was added
+    if (newGroupAdded) {
+      groupTitles = groupedItems.keys.toList();
+    }
+
+    // Add all items to main list
+    _allItems.addAll(items);
+  }
+
+  /// Helper method to create initial group structure from items
+  void _createInitialGroups(List<ItemType> items) {
+    // Initialize groups from new items
+    final Map<GroupTitle, List<ItemType>> newGroups = {};
+    for (final item in items) {
+      final groupTitle = widget.groupCreator(widget.groupBy(item));
+      newGroups.putIfAbsent(groupTitle, () => []).add(item);
+    }
+
+    // Sort each group if needed
+    if (widget.sortGroupBy != null) {
+      for (final entry in newGroups.entries) {
+        final List<ItemType> group = entry.value;
+        if (widget.groupSortOrder == SortOrder.ascending) {
+          group.sort((a, b) {
+            return (widget.sortGroupBy!(a) as Comparable?)
+                    ?.compareTo(widget.sortGroupBy!(b) as Comparable?) ??
+                0;
+          });
+        } else {
+          group.sort((a, b) {
+            return (widget.sortGroupBy!(b) as Comparable?)
+                    ?.compareTo(widget.sortGroupBy!(a) as Comparable?) ??
+                0;
+          });
+        }
+      }
+    }
+
+    // Set the grouped items directly
+    groupedItems = newGroups;
+    groupTitles = newGroups.keys.toList();
   }
 
   @override
@@ -529,12 +682,26 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     widget.controller._addItemsCallback = _addItems;
     widget.controller._removeWhereCallback = _removeWhere;
     widget.controller._removeCallback = (item) {
-      _allItems.remove(item);
-      groupedItems = groupItems(_allItems);
-      groupTitles = groupedItems.keys.toList();
-      if (mounted) {
-        setState(() {});
+      // Find which group contains this item
+      GroupTitle? groupToUpdate;
+      for (final entry in groupedItems.entries) {
+        if (entry.value.contains(item)) {
+          groupToUpdate = entry.key;
+          entry.value.remove(item);
+          break;
+        }
       }
+
+      // Remove from main list
+      _allItems.remove(item);
+
+      // If group is now empty, remove it and update titles
+      if (groupToUpdate != null && groupedItems[groupToUpdate]!.isEmpty) {
+        groupedItems.remove(groupToUpdate);
+        groupTitles = groupedItems.keys.toList();
+      }
+
+      if (mounted) setState(() {});
     };
 
     _initList();
@@ -564,10 +731,8 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
               noMoreItemsToLoad = true;
               widget.onNoMoreItemsFound?.call();
             }
-            // Increment the offset after a successful fetch
-            _pageInformationController.incrementOffset(items.length);
 
-            // Increment the page after a successful fetch
+            _pageInformationController.incrementOffset(items.length);
             _pageInformationController.incrementPage();
 
             if (items.isEmpty) {
@@ -579,10 +744,10 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
               }
               return;
             }
-            _allItems.addAll(items);
-            groupedItems = groupItems(_allItems);
 
-            groupTitles = groupedItems.keys.toList();
+            // Use optimized method to add items
+            _addItemsToGroups(items);
+
             if (mounted) {
               setState(() {
                 loading = false;
@@ -629,8 +794,8 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
                       return Column(
                         children: [
                           widget.itemBuilder(item),
-                          if (widget.seperatorBuilder != null)
-                            widget.seperatorBuilder!(item),
+                          if (widget.separatorBuilder != null)
+                            widget.separatorBuilder!(item),
                         ],
                       );
                     },
@@ -649,8 +814,8 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
                       return Column(
                         children: [
                           widget.itemBuilder(item),
-                          if (widget.seperatorBuilder != null)
-                            widget.seperatorBuilder!(item),
+                          if (widget.separatorBuilder != null)
+                            widget.separatorBuilder!(item),
                         ],
                       );
                     },
@@ -688,6 +853,14 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   @override
   void dispose() {
     _scrollController.dispose();
+
+    // Clear controller callbacks
+    widget.controller._getItemsCallback = null;
+    widget.controller._refreshCallback = null;
+    widget.controller._loadItemsCallback = null;
+    widget.controller._addItemsCallback = null;
+    widget.controller._removeWhereCallback = null;
+    widget.controller._removeCallback = null;
 
     super.dispose();
   }
