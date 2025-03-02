@@ -1,3 +1,23 @@
+## 1.2.9
+
+#### Performance Improvements
+
+- ⚡ Optimized group operations with targeted updates instead of full regrouping
+- 🧠 Reduced memory usage by avoiding unnecessary data structure recreation
+- 🚀 Implemented efficient item addition with selective group updates
+- 🗑️ Optimized item removal with targeted group processing
+
+#### Bug Fixes
+
+- 🔍 Fixed potential memory leaks by properly clearing controller callbacks
+- 🎯 Improved scroll performance for large datasets
+- 🔄 Enhanced refresh operation efficiency
+
+#### API Improvements
+
+- ✨ Added helper methods for group management (`_sortSingleGroup`, `_addItemsToGroups`, `_createInitialGroups`)
+- 📊 Better handling of empty groups after item removal
+
 ## 1.2.8 🐛 Bug fixes
 
 - Fixes hashValues deprecated issues
