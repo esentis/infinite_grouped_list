@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:infinite_grouped_list/helpers/pagination_info.dart';
-import 'package:infinite_grouped_list/infinite_grouped_list.dart';
+import 'package:infinite_grouped_list/src/helpers/pagination_info.dart';
+import 'package:infinite_grouped_list/src/infinite_grouped_list.dart';
 
 void main() {
   testWidgets('InfiniteGroupedList widget test', (WidgetTester tester) async {

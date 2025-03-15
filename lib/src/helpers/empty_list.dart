@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:infinite_grouped_list/infinite_grouped_list.dart';
+import 'package:infinite_grouped_list/src/infinite_grouped_list.dart';
 
 class EmptyList extends StatelessWidget {
   const EmptyList({
