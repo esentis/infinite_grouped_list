@@ -53,6 +53,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     ScrollPhysics? physics,
     bool? showRefreshIndicator,
     Key? key,
+    ScrollController? scrollController,
     VoidCallback? onNoMoreItemsFound,
   }) {
     return InfiniteGroupedList._(
@@ -80,6 +81,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       key: key,
       onNoMoreItemsFound: onNoMoreItemsFound,
       showGroups: showGroups ?? true,
+      scrollController: scrollController,
     );
   }
 
@@ -116,6 +118,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     VoidCallback? onNoMoreItemsFound,
     Key? key,
     bool? showGroups,
+    ScrollController? scrollController,
   }) {
     return InfiniteGroupedList._(
       onLoadMore: onLoadMore,
@@ -142,6 +145,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       showRefreshIndicator: showRefreshIndicator ?? true,
       onNoMoreItemsFound: onNoMoreItemsFound,
       showGroups: showGroups ?? true,
+      scrollController: scrollController,
       key: key,
     );
   }
@@ -190,6 +194,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     this.refreshIndicatorBackgroundColor,
     this.gridDelegate,
     this.showRefreshIndicator = true,
+    this.scrollController,
     super.key,
   });
 
@@ -320,6 +325,9 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// Whether to show the refresh indicator when the user pulls to refresh. Defaults to true.
   final bool showRefreshIndicator;
 
+  /// The scroll controller of the list.
+  final ScrollController? scrollController;
+
   @override
   _InfiniteGroupState<ItemType, GroupBy, GroupTitle> createState() =>
       _InfiniteGroupState();
@@ -335,7 +343,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   final _InfiniteGroupedListInternalController<ItemType, GroupBy, GroupTitle>
       _pageInformationController = _InfiniteGroupedListInternalController();
 
-  final ScrollController _scrollController = ScrollController();
+  late ScrollController _scrollController;
 
   final List<ItemType> _allItems = [];
 
@@ -676,6 +684,9 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   @override
   void initState() {
     super.initState();
+
+    _scrollController = widget.scrollController ?? ScrollController();
+
     widget.controller._getItemsCallback = _items;
     widget.controller._refreshCallback = _refresh;
     widget.controller._loadItemsCallback = _retry;
