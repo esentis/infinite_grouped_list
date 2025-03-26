@@ -1,3 +1,7 @@
+## 1.2.10
+
+- ✨ Added `scrollController` to all constructors, you can now pass your own scroll controller
+
 ## 1.2.9
 
 #### Performance Improvements
