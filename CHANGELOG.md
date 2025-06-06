@@ -1,3 +1,7 @@
+## 1.2.11 ⬆️ Upgrade dependencies
+
+- Upgraded dependencies to the latest versions
+
 ## 1.2.10
 
 - ✨ Added `scrollController` to all constructors, you can now pass your own scroll controller
