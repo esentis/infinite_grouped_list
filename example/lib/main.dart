@@ -1,34 +1,8 @@
-import 'dart:math';
-
+import 'package:example/group_by_date_example.dart';
+import 'package:example/group_by_date_grid_example.dart';
+import 'package:example/group_by_type_example.dart';
+import 'package:example/reactive_bloc_example.dart';
 import 'package:flutter/material.dart';
-import 'package:infinite_grouped_list/infinite_grouped_list.dart';
-
-enum TransactionType {
-  transport,
-  food,
-  shopping,
-  entertainment,
-  health,
-  other,
-}
-
-class Transaction {
-  final String name;
-  final DateTime dateTime;
-  final double amount;
-  final TransactionType type;
-  Transaction({
-    required this.name,
-    required this.dateTime,
-    required this.amount,
-    required this.type,
-  });
-
-  @override
-  String toString() {
-    return '{name: $name, dateTime: $dateTime}';
-  }
-}
 
 void main() {
   runApp(const MyApp());
@@ -37,164 +11,207 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Infinite Grouped List Examples',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
+      home: const ExampleSelectionPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  bool dontThrowError = false;
-
-  DateTime baseDate = DateTime.now();
-  InfiniteGroupedListController<Transaction, DateTime, String> controller =
-      InfiniteGroupedListController<Transaction, DateTime, String>();
-  Future<List<Transaction>> onLoadMore(int offset) async {
-    await Future.delayed(const Duration(seconds: 1));
-
-    return List<Transaction>.generate(
-      20,
-      (index) {
-        final tempDate = baseDate;
-        baseDate = baseDate.subtract(const Duration(days: 1));
-        return Transaction(
-          name: 'Transaction num #$index',
-          dateTime: tempDate,
-          amount: Random().nextDouble() * 1000,
-          type: TransactionType.values[Random().nextInt(6)],
-        );
-      },
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-  }
+class ExampleSelectionPage extends StatelessWidget {
+  const ExampleSelectionPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        shadowColor: Colors.grey.withValues(alpha: 0.2),
-        title: const Text('Infinite Grouped List'),
-        backgroundColor: Colors.white,
+        title: const Text('Infinite Grouped List Examples'),
         centerTitle: true,
-        elevation: 5,
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: InfiniteGroupedList(
-        groupBy: (item) => item.dateTime,
-        controller: controller,
-        sortGroupBy: (item) => item.dateTime,
-        initialItemsErrorWidget: (error) => GestureDetector(
-          child: Text(
-            error.toString(),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              decoration: TextDecoration.underline,
-              decorationColor: Colors.blue,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Choose an example to explore:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 24),
+            _buildExampleCard(
+              context,
+              title: 'Reactive BLoC Example',
+              subtitle:
+                  'Demonstrates reactive state management with BLoC pattern',
+              icon: Icons.memory,
               color: Colors.blue,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ReactiveBlocExample()),
+              ),
+              isNew: true,
             ),
-          ),
-        ),
-        groupTitleBuilder: (title, groupBy, isPinned, scrollPercentage) =>
-            Padding(
-          padding: const EdgeInsets.only(bottom: 12.0, top: 12.0),
-          child: Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 5,
-                  offset: Offset(0, 2),
-                ),
-              ],
+            const SizedBox(height: 16),
+            _buildExampleCard(
+              context,
+              title: 'Group by Date Example',
+              subtitle: 'Groups items by date with imperative pattern',
+              icon: Icons.date_range,
+              color: Colors.green,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const GroupByDateExample()),
+              ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+            const SizedBox(height: 16),
+            _buildExampleCard(
+              context,
+              title: 'Group by Type Example',
+              subtitle: 'Groups items by category/type',
+              icon: Icons.category,
+              color: Colors.orange,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const GroupByTypeExample()),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildExampleCard(
+              context,
+              title: 'Grid View Example',
+              subtitle: 'Groups items in a grid layout by date',
+              icon: Icons.grid_view,
+              color: Colors.purple,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const GroupByDateGridExample()),
+              ),
+            ),
+            const Spacer(),
+            const Card(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue, size: 32),
+                    SizedBox(height: 8),
+                    Text(
+                      'New: Reactive Pattern Support',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'The InfiniteGroupedList now supports reactive state management patterns like BLoC, Provider, and Riverpod with the new .reactive() and .reactiveGrid() constructors!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
+          ],
         ),
-        itemBuilder: (item) => ListTile(
-          onTap: () {
-            controller.remove(item);
-          },
-          title: Text(item.name),
-          leading: item.type == TransactionType.transport
-              ? const Icon(Icons.directions_bus)
-              : item.type == TransactionType.food
-                  ? const Icon(Icons.fastfood)
-                  : item.type == TransactionType.shopping
-                      ? const Icon(Icons.shopping_bag)
-                      : item.type == TransactionType.entertainment
-                          ? const Icon(Icons.movie)
-                          : item.type == TransactionType.health
-                              ? const Icon(Icons.medical_services)
-                              : const Icon(Icons.money),
-          trailing: Text(
-            '${item.amount.toStringAsFixed(2)}€',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          subtitle: Text(item.dateTime.toIso8601String()),
-        ),
-        onLoadMore: (info) => onLoadMore(info.offset),
-        groupCreator: (dateTime) {
-          final now = DateTime.now();
-          final today = DateTime(now.year, now.month, now.day);
-          final yesterday = today.subtract(const Duration(days: 1));
-          final lastWeek = today.subtract(const Duration(days: 7));
-          final lastMonth = DateTime(today.year, today.month - 1, today.day);
+      ),
+    );
+  }
 
-          if (today.day == dateTime.day &&
-              today.month == dateTime.month &&
-              today.year == dateTime.year) {
-            return 'Today';
-          } else if (yesterday.day == dateTime.day &&
-              yesterday.month == dateTime.month &&
-              yesterday.year == dateTime.year) {
-            return 'Yesterday';
-          } else if (lastWeek.isBefore(dateTime) &&
-              dateTime.isBefore(yesterday)) {
-            return 'Last Week';
-          } else if (lastMonth.isBefore(dateTime) &&
-              dateTime.isBefore(lastWeek)) {
-            return 'Last Month';
-          } else {
-            // Convert the DateTime to a string for grouping
-            return '${dateTime.year}-${dateTime.month}-${dateTime.day}';
-          }
-        },
+  Widget _buildExampleCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+    bool isNew = false,
+  }) {
+    return Card(
+      elevation: 4,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        if (isNew)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'NEW',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.chevron_right,
+                color: Colors.grey[400],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
