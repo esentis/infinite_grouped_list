@@ -20,6 +20,8 @@ Brings together infinite scrolling, group-based item organization, and numerous 
 
 - **Grouping of Items**: The widget can organize items into groups based on user-defined criteria. This helps to make sense of large amounts of data by breaking it down into manageable chunks.
 
+- **Reactive State Management**: 🆕 Full support for modern state management patterns like BLoC, Provider, and Riverpod with dedicated reactive constructors that separate event triggering from data listening.
+
 - **Customizable Loading and Error States**: You can provide custom widgets to be displayed while data is being loaded or if an error occurs. This allows for a seamless, branded experience.
 
 - **Pull-to-Refresh**: The widget incorporates a pull-to-refresh feature, letting users manually trigger a refresh of the list's content.
@@ -28,16 +30,98 @@ Brings together infinite scrolling, group-based item organization, and numerous 
 
 ### Usage
 
-To use the InfiniteGroupedList widget, you need to provide several callbacks:
+The InfiniteGroupedList offers two usage patterns to fit different architectural approaches:
 
-- `onLoadMore(PaginationInfo)`: A function that fetches more data.
+#### 🔄 Reactive Pattern (Recommended for Modern Apps)
 
-  - `PaginationInfo` is a helper class that keeps track of the current offset and page of the InfiniteGroupedList. It's primarily used in the onLoadMore function, providing necessary information for paginated data fetching from a backend or local data source. In a typical scenario, these values are used as parameters for API calls or database queries to load the appropriate 'page' of data. For instance, in the onLoadMore function, the PaginationInfo instance is passed as an argument where you could use paginationInfo.offset and paginationInfo.page to fetch data accordingly from your data source.
+Perfect for apps using BLoC, Provider, Riverpod, or any external state management:
 
-- `itemBuilder`: A function that builds the individual list items.
-- `groupBy`: A function that defines the criterion for grouping items.
-- `groupCreator`: A function that assigns a name to each group.
+```dart
+BlocBuilder<ItemsBloc, ItemsState>(
+  builder: (context, state) {
+    return InfiniteGroupedList<Item, String, String>.reactive(
+      // External state from your state management solution
+      items: state.items,
+      isLoading: state.isLoading,
+      hasReachedMax: state.hasReachedMax,
+      error: state.error,
+      
+      // Event trigger - cleanly separated from data fetching
+      onLoadMoreTriggered: () {
+        context.read<ItemsBloc>().add(LoadMoreItems());
+      },
+      
+      // Refresh trigger
+      onRefresh: () {
+        context.read<ItemsBloc>().add(RefreshItems());
+      },
+      
+      // UI builders
+      itemBuilder: (item) => ListTile(title: Text(item.name)),
+      groupBy: (item) => item.category,
+      groupCreator: (category) => category,
+      groupTitleBuilder: (title, _, __, ___) => Text(title),
+    );
+  },
+)
+```
+
+#### ⚡ Imperative Pattern (Traditional Approach)
+
+For apps that prefer direct data fetching within the widget:
+
+```dart
+InfiniteGroupedList(
+  onLoadMore: (paginationInfo) async {
+    // Fetch data directly and return it
+    return await apiService.fetchItems(
+      page: paginationInfo.page,
+      limit: 20,
+    );
+  },
+  itemBuilder: (item) => ListTile(title: Text(item.name)),
+  groupBy: (item) => item.category,
+  groupCreator: (category) => category,
+  groupTitleBuilder: (title, _, __, ___) => Text(title),
+)
+```
+
+#### Key Differences
+
+- **Reactive**: Event triggering and data listening are completely separated. Your state management handles data fetching, and the widget displays the current state.
+- **Imperative**: The widget directly calls your data fetching function and manages the loading states internally.
+
+#### PaginationInfo Helper
+
+When using the imperative pattern, `PaginationInfo` provides pagination context:
+- `offset`: Current item offset for offset-based pagination
+- `page`: Current page number for page-based pagination  
+- `limit`: Items per page (configurable via controller)
 
 The InfiniteGroupedList widget is a comprehensive solution for any use case that involves displaying large amounts of data in an organized, easy-to-navigate manner.
 
-Examples can be found [here](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_date_example.dart), [here](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_type_example.dart) & [here](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_date_grid_example.dart).
+### Examples
+
+Explore comprehensive examples demonstrating different usage patterns:
+
+- **🆕 [Reactive BLoC Example](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/reactive_bloc_example.dart)**: Complete implementation using reactive pattern with flutter_bloc, including error handling, loading states, and event-driven architecture.
+
+- **📅 [Group by Date](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_date_example.dart)**: Traditional imperative pattern grouping transactions by date with custom group titles.
+
+- **🏷️ [Group by Type](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_type_example.dart)**: Demonstrates grouping items by category/type with different visual treatments.
+
+- **🔲 [Grid Layout](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_date_grid_example.dart)**: Shows how to use the `.gridView()` constructor for grid-based layouts.
+
+Run the example app to see all patterns in action with an interactive example selection screen.
+
+### Migration Guide
+
+**Existing users**: Your current code continues to work without any changes! The new reactive constructors are purely additive.
+
+**Moving to reactive pattern**: 
+1. Replace `InfiniteGroupedList()` with `InfiniteGroupedList.reactive()`
+2. Move your `onLoadMore` logic to your state management solution
+3. Replace the `onLoadMore` parameter with `onLoadMoreTriggered` callback  
+4. Provide external state via `items`, `isLoading`, `hasReachedMax` parameters
+
+The reactive pattern is recommended for new projects using modern state management, while the imperative pattern remains fully supported for simpler use cases.
