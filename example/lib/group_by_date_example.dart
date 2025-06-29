@@ -1,3 +1,5 @@
+// ignore_for_file: unreachable_from_main
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -32,6 +34,23 @@ class Transaction {
 
 void main() {
   runApp(const MyApp());
+}
+
+// Export the main widget for navigation
+class GroupByDateExample extends StatelessWidget {
+  const GroupByDateExample({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Group by Date Example',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: const MyHomePage(),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -91,11 +110,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        shadowColor: Colors.grey.withValues(alpha: 0.2),
-        title: const Text('Infinite Grouped List'),
-        backgroundColor: Colors.white,
-        centerTitle: true,
-        elevation: 5,
+        title: const Text('Group by Date Example'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
       ),
       body: InfiniteGroupedList(
         groupBy: (item) => item.dateTime,

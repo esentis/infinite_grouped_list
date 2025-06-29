@@ -1,3 +1,5 @@
+// ignore_for_file: unreachable_from_main
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -32,6 +34,16 @@ class Transaction {
 
 void main() {
   runApp(const MyApp());
+}
+
+// Export the main widget for navigation
+class GroupByDateGridExample extends StatelessWidget {
+  const GroupByDateGridExample({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MyHomePage();
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -108,7 +120,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         shadowColor: Colors.grey.withValues(alpha: 0.2),
         title: const Text('Infinite Grouped List'),
