@@ -82,6 +82,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       onNoMoreItemsFound: onNoMoreItemsFound,
       showGroups: showGroups ?? true,
       scrollController: scrollController,
+      isReactiveMode: false,
     );
   }
 
@@ -147,6 +148,196 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       showGroups: showGroups ?? true,
       scrollController: scrollController,
       key: key,
+      isReactiveMode: false,
+    );
+  }
+
+  /// Creates a reactive InfiniteGroupedList for ListView layout.
+  ///
+  /// This constructor is designed for use with external state management
+  /// solutions like BLoC, Provider, Riverpod, etc. where data fetching
+  /// and state management are handled externally.
+  ///
+  /// Example usage with BLoC:
+  /// ```dart
+  /// BlocBuilder<ItemsBloc, ItemsState>(
+  ///   builder: (context, state) {
+  ///     return InfiniteGroupedList.reactive(
+  ///       items: state.items,
+  ///       isLoading: state.isLoading,
+  ///       hasReachedMax: state.hasReachedMax,
+  ///       onLoadMoreTriggered: () => context.read<ItemsBloc>()
+  ///         .add(LoadMoreItems()),
+  ///       itemBuilder: (item) => ListTile(title: Text(item.name)),
+  ///       groupBy: (item) => item.category,
+  ///       groupCreator: (category) => category,
+  ///       groupTitleBuilder: (title, _, __, ___) => Text(title),
+  ///     );
+  ///   },
+  /// )
+  /// ```
+  factory InfiniteGroupedList.reactive({
+    required List<ItemType> items,
+    required bool isLoading,
+    required bool hasReachedMax,
+    required VoidCallback onLoadMoreTriggered,
+    required Widget Function(ItemType item) itemBuilder,
+    required GroupBy Function(ItemType item) groupBy,
+    required Widget Function(
+      GroupTitle title,
+      GroupBy groupBy,
+      bool isPinned,
+      double scrollPercentage,
+    ) groupTitleBuilder,
+    required GroupTitle Function(GroupBy) groupCreator,
+    bool? showGroups,
+    Function(ItemType)? sortGroupBy,
+    Widget Function(ItemType)? seperatorBuilder,
+    InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
+    VoidCallback? onRefresh,
+    Widget? noItemsFoundWidget,
+    dynamic error,
+    Widget Function(dynamic error)? errorWidget,
+    SortOrder groupSortOrder = SortOrder.descending,
+    bool stickyGroups = true,
+    Widget loadingWidget = const Center(
+      child: CircularProgressIndicator(),
+    ),
+    Color? refreshIndicatorColor,
+    Color? refreshIndicatorBackgroundColor,
+    ScrollPhysics? physics,
+    bool? showRefreshIndicator,
+    Key? key,
+    ScrollController? scrollController,
+  }) {
+    return InfiniteGroupedList._(
+      // Reactive mode properties
+      reactiveItems: items,
+      reactiveIsLoading: isLoading,
+      reactiveHasReachedMax: hasReachedMax,
+      onLoadMoreTriggered: onLoadMoreTriggered,
+      reactiveError: error,
+      // Common properties
+      itemBuilder: itemBuilder,
+      groupTitleBuilder: groupTitleBuilder,
+      groupBy: groupBy,
+      groupCreator: groupCreator,
+      sortGroupBy: sortGroupBy,
+      separatorBuilder: seperatorBuilder,
+      controller: controller ?? InfiniteGroupedListController(),
+      onRefresh: onRefresh,
+      noItemsFoundWidget: noItemsFoundWidget,
+      initialItemsErrorWidget: errorWidget,
+      loadMoreItemsErrorWidget: errorWidget,
+      groupSortOrder: groupSortOrder,
+      stickyGroups: stickyGroups,
+      loadingWidget: loadingWidget,
+      refreshIndicatorColor: refreshIndicatorColor,
+      refreshIndicatorBackgroundColor: refreshIndicatorBackgroundColor,
+      listStyle: ListStyle.listView,
+      physics: physics ?? const AlwaysScrollableScrollPhysics(),
+      showRefreshIndicator: showRefreshIndicator ?? true,
+      showGroups: showGroups ?? true,
+      scrollController: scrollController,
+      key: key,
+      isReactiveMode: true,
+    );
+  }
+
+  /// Creates a reactive InfiniteGroupedList for GridView layout.
+  ///
+  /// This constructor is designed for use with external state management
+  /// solutions like BLoC, Provider, Riverpod, etc. where data fetching
+  /// and state management are handled externally.
+  ///
+  /// Example usage with BLoC:
+  /// ```dart
+  /// BlocBuilder<ItemsBloc, ItemsState>(
+  ///   builder: (context, state) {
+  ///     return InfiniteGroupedList.reactiveGrid(
+  ///       items: state.items,
+  ///       isLoading: state.isLoading,
+  ///       hasReachedMax: state.hasReachedMax,
+  ///       onLoadMoreTriggered: () => context.read<ItemsBloc>()
+  ///         .add(LoadMoreItems()),
+  ///       itemBuilder: (item) => Card(child: Text(item.name)),
+  ///       groupBy: (item) => item.category,
+  ///       groupCreator: (category) => category,
+  ///       groupTitleBuilder: (title, _, __, ___) => Text(title),
+  ///       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+  ///         crossAxisCount: 2,
+  ///       ),
+  ///     );
+  ///   },
+  /// )
+  /// ```
+  factory InfiniteGroupedList.reactiveGrid({
+    required List<ItemType> items,
+    required bool isLoading,
+    required bool hasReachedMax,
+    required VoidCallback onLoadMoreTriggered,
+    required Widget Function(ItemType item) itemBuilder,
+    required GroupBy Function(ItemType item) groupBy,
+    required Widget Function(
+      GroupTitle title,
+      GroupBy groupBy,
+      bool isPinned,
+      double scrollPercentage,
+    ) groupTitleBuilder,
+    required GroupTitle Function(GroupBy) groupCreator,
+    SliverGridDelegate? gridDelegate,
+    bool? showGroups,
+    Function(ItemType)? sortGroupBy,
+    Widget Function(ItemType)? seperatorBuilder,
+    InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
+    VoidCallback? onRefresh,
+    Widget? noItemsFoundWidget,
+    dynamic error,
+    Widget Function(dynamic error)? errorWidget,
+    SortOrder groupSortOrder = SortOrder.descending,
+    bool stickyGroups = true,
+    Widget loadingWidget = const Center(
+      child: CircularProgressIndicator(),
+    ),
+    Color? refreshIndicatorColor,
+    Color? refreshIndicatorBackgroundColor,
+    ScrollPhysics? physics,
+    bool? showRefreshIndicator,
+    Key? key,
+    ScrollController? scrollController,
+  }) {
+    return InfiniteGroupedList._(
+      // Reactive mode properties
+      reactiveItems: items,
+      reactiveIsLoading: isLoading,
+      reactiveHasReachedMax: hasReachedMax,
+      onLoadMoreTriggered: onLoadMoreTriggered,
+      reactiveError: error,
+      // Common properties
+      itemBuilder: itemBuilder,
+      groupTitleBuilder: groupTitleBuilder,
+      groupBy: groupBy,
+      groupCreator: groupCreator,
+      sortGroupBy: sortGroupBy,
+      separatorBuilder: seperatorBuilder,
+      controller: controller ?? InfiniteGroupedListController(),
+      onRefresh: onRefresh,
+      noItemsFoundWidget: noItemsFoundWidget,
+      initialItemsErrorWidget: errorWidget,
+      loadMoreItemsErrorWidget: errorWidget,
+      groupSortOrder: groupSortOrder,
+      stickyGroups: stickyGroups,
+      loadingWidget: loadingWidget,
+      refreshIndicatorColor: refreshIndicatorColor,
+      refreshIndicatorBackgroundColor: refreshIndicatorBackgroundColor,
+      gridDelegate: gridDelegate,
+      listStyle: ListStyle.grid,
+      physics: physics ?? const AlwaysScrollableScrollPhysics(),
+      showRefreshIndicator: showRefreshIndicator ?? true,
+      showGroups: showGroups ?? true,
+      scrollController: scrollController,
+      key: key,
+      isReactiveMode: true,
     );
   }
 
@@ -168,13 +359,14 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// [loadingWidget], [refreshIndicatorColor], and
   /// [refreshIndicatorBackgroundColor].
   const InfiniteGroupedList._({
-    required this.onLoadMore,
+    this.onLoadMore,
     required this.itemBuilder,
     required this.groupTitleBuilder,
     required this.groupBy,
     required this.groupCreator,
     required this.listStyle,
     required this.controller,
+    required this.isReactiveMode,
     this.showGroups = true,
     this.onNoMoreItemsFound,
     this.sortGroupBy,
@@ -195,8 +387,25 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     this.gridDelegate,
     this.showRefreshIndicator = true,
     this.scrollController,
+    // Reactive mode properties
+    this.reactiveItems,
+    this.reactiveIsLoading,
+    this.reactiveHasReachedMax,
+    this.onLoadMoreTriggered,
+    this.reactiveError,
     super.key,
-  });
+  }) : assert(
+         isReactiveMode
+             ? (reactiveItems != null &&
+                reactiveIsLoading != null &&
+                reactiveHasReachedMax != null &&
+                onLoadMoreTriggered != null)
+             : (onLoadMore != null),
+         isReactiveMode
+             ? 'In reactive mode, reactiveItems, reactiveIsLoading, reactiveHasReachedMax, '
+               'and onLoadMoreTriggered must be provided.'
+             : 'In imperative mode, onLoadMore must be provided.',
+       );
 
   final SliverGridDelegate? gridDelegate;
   final ListStyle listStyle;
@@ -235,7 +444,9 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// If an error occurs while fetching the items (for example, due to network
   /// issues), the function should throw an exception. The widget will catch this
   /// exception and call the [loadMoreItemsErrorWidget] builder.
-  final Future<List<ItemType>> Function(PaginationInfo paginationInfo)
+  /// 
+  /// This is null in reactive mode.
+  final Future<List<ItemType>> Function(PaginationInfo paginationInfo)?
       onLoadMore;
 
   /// The item builder is used to build the item.
@@ -328,6 +539,26 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// The scroll controller of the list.
   final ScrollController? scrollController;
 
+  // Reactive mode properties
+  
+  /// Whether this widget is in reactive mode.
+  final bool isReactiveMode;
+  
+  /// External items list for reactive mode.
+  final List<ItemType>? reactiveItems;
+  
+  /// External loading state for reactive mode.
+  final bool? reactiveIsLoading;
+  
+  /// External flag indicating whether max items have been reached for reactive mode.
+  final bool? reactiveHasReachedMax;
+  
+  /// Callback triggered when more items should be loaded in reactive mode.
+  final VoidCallback? onLoadMoreTriggered;
+  
+  /// External error state for reactive mode.
+  final dynamic reactiveError;
+
   @override
   _InfiniteGroupState<ItemType, GroupBy, GroupTitle> createState() =>
       _InfiniteGroupState();
@@ -351,7 +582,42 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 
   late List<GroupTitle> groupTitles = groupedItems.keys.toList();
 
+  /// Handles reactive data updates from external state management
+  void _handleReactiveDataUpdate() {
+    if (!widget.isReactiveMode) return;
+    
+    // Update loading state from external state
+    final externalLoading = widget.reactiveIsLoading ?? false;
+    final externalHasReachedMax = widget.reactiveHasReachedMax ?? false;
+    final externalItems = widget.reactiveItems ?? [];
+    final externalError = widget.reactiveError;
+    
+    // Update internal state from external state
+    if (mounted) {
+      setState(() {
+        loading = externalLoading;
+        noMoreItemsToLoad = externalHasReachedMax;
+        hasError = externalError != null;
+        error = externalError;
+        
+        // Update items
+        _allItems.clear();
+        _allItems.addAll(externalItems);
+        
+        // Re-group items
+        groupedItems = groupItems(_allItems);
+        groupTitles = groupedItems.keys.toList();
+      });
+    }
+  }
+
   Future<void> _initList() async {
+    if (widget.isReactiveMode) {
+      // In reactive mode, data comes from external state
+      _handleReactiveDataUpdate();
+      return;
+    }
+    
     if (!loading && mounted) {
       setState(() {
         loading = true;
@@ -359,7 +625,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
       });
     }
     try {
-      final items = await widget.onLoadMore(
+      final items = await widget.onLoadMore!(
         PaginationInfo(
           offset: _pageInformationController.currentOffset,
           page: _pageInformationController.currentPage,
@@ -398,8 +664,15 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 
   /// Refreshes the list resetting the offset and page to 0.
   Future<void> _refresh() async {
-    _allItems.clear();
     widget.onRefresh?.call();
+    
+    if (widget.isReactiveMode) {
+      // In reactive mode, refresh is handled externally
+      // The external state management should handle the refresh logic
+      return;
+    }
+    
+    _allItems.clear();
     noMoreItemsToLoad = false;
     hasError = false;
     if (mounted) {
@@ -413,7 +686,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
       if (noMoreItemsToLoad) {
         return;
       }
-      final items = await widget.onLoadMore(
+      final items = await widget.onLoadMore!(
         PaginationInfo(
           offset: _pageInformationController.currentOffset,
           page: _pageInformationController.currentPage,
@@ -453,6 +726,12 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 
   /// Retries the last failed fetch
   Future<void> _retry() async {
+    if (widget.isReactiveMode) {
+      // In reactive mode, retry is handled externally
+      // The external state management should handle the retry logic
+      return;
+    }
+    
     if (!loading && mounted) {
       setState(() {
         loading = true;
@@ -463,7 +742,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
       if (noMoreItemsToLoad) {
         return;
       }
-      final items = await widget.onLoadMore(
+      final items = await widget.onLoadMore!(
         PaginationInfo(
           offset: _pageInformationController.currentOffset,
           page: _pageInformationController.currentPage,
@@ -687,11 +966,19 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 
     _scrollController = widget.scrollController ?? ScrollController();
 
+    // Set up controller callbacks
     widget.controller._getItemsCallback = _items;
     widget.controller._refreshCallback = _refresh;
     widget.controller._loadItemsCallback = _retry;
     widget.controller._addItemsCallback = _addItems;
     widget.controller._removeWhereCallback = _removeWhere;
+    widget.controller._isReactiveMode = widget.isReactiveMode;
+    
+    // Set up reactive mode callback if needed
+    if (widget.isReactiveMode) {
+      widget.controller._onLoadMoreTriggeredCallback = widget.onLoadMoreTriggered;
+    }
+    
     widget.controller._removeCallback = (item) {
       // Find which group contains this item
       GroupTitle? groupToUpdate;
@@ -721,6 +1008,12 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
               _scrollController.position.maxScrollExtent - 100 &&
           widget.isPaged) {
         if (!loading && !noMoreItemsToLoad && !hasError && mounted) {
+          if (widget.isReactiveMode) {
+            // In reactive mode, trigger external load more event
+            widget.onLoadMoreTriggered?.call();
+            return;
+          }
+          
           setState(() {
             loading = true;
             hasError = false;
@@ -730,7 +1023,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
             if (noMoreItemsToLoad) {
               return;
             }
-            final items = await widget.onLoadMore(
+            final items = await widget.onLoadMore!(
               PaginationInfo(
                 offset: _pageInformationController.currentOffset,
                 page: _pageInformationController.currentPage,
@@ -775,6 +1068,22 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
         }
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(InfiniteGroupedList<ItemType, GroupBy, GroupTitle> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // Handle reactive mode data updates
+    if (widget.isReactiveMode) {
+      // Check if any reactive data has changed
+      if (widget.reactiveItems != oldWidget.reactiveItems ||
+          widget.reactiveIsLoading != oldWidget.reactiveIsLoading ||
+          widget.reactiveHasReachedMax != oldWidget.reactiveHasReachedMax ||
+          widget.reactiveError != oldWidget.reactiveError) {
+        _handleReactiveDataUpdate();
+      }
+    }
   }
 
   CustomScrollView _buildList() {
@@ -872,6 +1181,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     widget.controller._addItemsCallback = null;
     widget.controller._removeWhereCallback = null;
     widget.controller._removeCallback = null;
+    widget.controller._onLoadMoreTriggeredCallback = null;
 
     super.dispose();
   }
@@ -961,6 +1271,10 @@ class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
 
   void Function(bool Function(ItemType) predicate)? _removeWhereCallback;
 
+  VoidCallback? _onLoadMoreTriggeredCallback;
+
+  bool _isReactiveMode = false;
+
   /// The limit of items to fetch in a single call.
   int limit;
 
@@ -972,7 +1286,16 @@ class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
   /// Call this function to programmatically fetch the next page
   ///
   /// If the last call was failed then it will retry the last call.
+  /// 
+  /// In reactive mode, this triggers the onLoadMoreTriggered callback
+  /// instead of performing internal data fetching.
   Future<void> loadItems() async {
+    if (_isReactiveMode) {
+      // In reactive mode, trigger external load more event
+      _onLoadMoreTriggeredCallback?.call();
+      return;
+    }
+    // Imperative mode - use existing behavior
     _loadItemsCallback?.call();
   }
 
@@ -982,19 +1305,46 @@ class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
   }
 
   /// Remove an item from the list.
+  /// 
+  /// Note: This method is not supported in reactive mode.
+  /// In reactive mode, manage data through your external state management solution.
   void remove(ItemType item) {
+    if (_isReactiveMode) {
+      throw UnsupportedError(
+        'remove() is not supported in reactive mode. '
+        'Manage data through your external state management solution.',
+      );
+    }
     _removeCallback?.call(item);
   }
 
   /// Add items to the list.
   /// If index is provided, the items will be added at that index.
+  /// 
+  /// Note: This method is not supported in reactive mode.
+  /// In reactive mode, manage data through your external state management solution.
   void addItems(List<ItemType> items, {int? index}) {
+    if (_isReactiveMode) {
+      throw UnsupportedError(
+        'addItems() is not supported in reactive mode. '
+        'Manage data through your external state management solution.',
+      );
+    }
     _addItemsCallback?.call(items, index: index);
   }
 
   /// Remove items from the list based on a predicate.
   /// The predicate should return true for items that should be removed.
+  /// 
+  /// Note: This method is not supported in reactive mode.
+  /// In reactive mode, manage data through your external state management solution.
   void removeWhere(bool Function(ItemType) predicate) {
+    if (_isReactiveMode) {
+      throw UnsupportedError(
+        'removeWhere() is not supported in reactive mode. '
+        'Manage data through your external state management solution.',
+      );
+    }
     _removeWhereCallback?.call(predicate);
   }
 }
