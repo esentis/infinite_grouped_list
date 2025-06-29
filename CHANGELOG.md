@@ -1,3 +1,38 @@
+## 1.3.0 🚀 Reactive State Management Support
+
+#### Major Features
+
+- ✨ **NEW**: `InfiniteGroupedList.reactive()` constructor for reactive state management patterns
+- ✨ **NEW**: `InfiniteGroupedList.reactiveGrid()` constructor for grid layouts with reactive patterns  
+- 🔌 **Full BLoC/Provider/Riverpod Integration**: Clean separation between event triggering and data listening
+- 🎯 **Event-Driven Architecture**: `onLoadMoreTriggered` callback decouples data fetching from UI events
+- 📡 **External State Support**: Accepts `items`, `isLoading`, `hasReachedMax`, and `error` from external state management
+
+#### API Enhancements
+
+- 🎛️ **Smart Controller Behavior**: Controller methods automatically adapt to reactive vs imperative mode
+- 🚫 **Safety Guards**: Controller throws helpful errors when using imperative methods in reactive mode
+- 🔄 **Reactive Lifecycle**: Automatic updates when external state changes via `didUpdateWidget`
+- ⚡ **Performance Optimized**: Efficient reactive data handling without unnecessary rebuilds
+
+#### Example Project Improvements
+
+- 📱 **Comprehensive BLoC Example**: Full-featured reactive example with mock API, error handling, and loading states
+- 🧭 **Enhanced Navigation**: Example selection screen with beautiful cards and proper navigation
+- 🎨 **Rich UI Components**: Category-based grouping with colored icons, sticky headers, and animations
+- 🔄 **Refresh Patterns**: Demonstrates both pull-to-refresh and manual refresh in reactive mode
+
+#### Developer Experience
+
+- 📚 **Pattern Comparison**: Side-by-side examples of imperative vs reactive patterns
+- 🏗️ **Clean Architecture**: Examples follow modern Flutter architecture best practices  
+- 🎯 **Real-world Simulation**: Mock network calls, pagination limits, and error scenarios
+- 💡 **Clear Documentation**: Comprehensive inline examples and usage patterns
+
+#### Breaking Changes
+
+- None! Fully backward compatible with existing imperative usage
+
 ## 1.2.11 ⬆️ Upgrade dependencies
 
 - Upgraded dependencies to the latest versions
