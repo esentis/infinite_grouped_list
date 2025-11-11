@@ -46,17 +46,17 @@ BlocBuilder<ItemsBloc, ItemsState>(
       isLoading: state.isLoading,
       hasReachedMax: state.hasReachedMax,
       error: state.error,
-      
+
       // Event trigger - cleanly separated from data fetching
       onLoadMoreTriggered: () {
         context.read<ItemsBloc>().add(LoadMoreItems());
       },
-      
+
       // Refresh trigger
       onRefresh: () {
         context.read<ItemsBloc>().add(RefreshItems());
       },
-      
+
       // UI builders
       itemBuilder: (item) => ListTile(title: Text(item.name)),
       groupBy: (item) => item.category,
@@ -95,8 +95,9 @@ InfiniteGroupedList(
 #### PaginationInfo Helper
 
 When using the imperative pattern, `PaginationInfo` provides pagination context:
+
 - `offset`: Current item offset for offset-based pagination
-- `page`: Current page number for page-based pagination  
+- `page`: Current page number for page-based pagination
 - `limit`: Items per page (configurable via controller)
 
 The InfiniteGroupedList widget is a comprehensive solution for any use case that involves displaying large amounts of data in an organized, easy-to-navigate manner.
@@ -115,9 +116,16 @@ InfiniteGroupedList(
 );
 
 // Later, jump to a concrete title or resolve it dynamically with a predicate
+// Option A: jump by the exact group title you already know
+controller.jumpToGroup(
+  title: 'Today',
+  alignment: 0.0, // pin the header to the top
+);
+
+// Option B: resolve dynamically via predicate (provide predicate *instead* of title)
 controller.jumpToGroup(
   predicate: (title, groupBy) => isSameDay(groupBy, DateTime.now()),
-  alignment: 0.0, // pin the header to the top
+  alignment: 0.0,
   loadUntilFound: true, // imperative mode only
 );
 ```
@@ -144,10 +152,11 @@ Run the example app to see all patterns in action with an interactive example se
 
 **Existing users**: Your current code continues to work without any changes! The new reactive constructors are purely additive.
 
-**Moving to reactive pattern**: 
+**Moving to reactive pattern**:
+
 1. Replace `InfiniteGroupedList()` with `InfiniteGroupedList.reactive()`
 2. Move your `onLoadMore` logic to your state management solution
-3. Replace the `onLoadMore` parameter with `onLoadMoreTriggered` callback  
+3. Replace the `onLoadMore` parameter with `onLoadMoreTriggered` callback
 4. Provide external state via `items`, `isLoading`, `hasReachedMax` parameters
 
 The reactive pattern is recommended for new projects using modern state management, while the imperative pattern remains fully supported for simpler use cases.

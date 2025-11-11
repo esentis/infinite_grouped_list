@@ -1466,11 +1466,11 @@ class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
   /// Scrolls the list so that the group identified by [title] or [predicate]
   /// becomes visible. Returns true if the group could be found and focused.
   ///
-  /// Set [predicate] to locate a group dynamically based on its title and
-  /// grouping key (the first element's `groupBy` result). At least one locator
-  /// must be provided.
+  /// * Pass `title` when you already know the exact visual label of the group.
+  /// * Pass `predicate` (and keep `title` null) when the target must be resolved dynamically (e.g. match today's date).
+  /// * `animate`, `duration`, `curve`, and `alignment` are forwarded to [Scrollable.ensureVisible].
+  /// * `loadUntilFound` is imperative-only and keeps fetching more pages until the group appears.
   Future<bool> jumpToGroup({
-    /// The title of the group to jump to.
     GroupTitle? title,
     bool Function(GroupTitle title, GroupBy groupBy)? predicate,
     bool animate = true,
@@ -1479,9 +1479,9 @@ class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
     double alignment = 0.0,
     bool loadUntilFound = false,
   }) {
-    if (title == null && predicate == null) {
+    if ((title == null) == (predicate == null)) {
       throw ArgumentError(
-        'Provide either a title or predicate to jumpToGroup.',
+        'Provide exactly one of title or predicate when calling jumpToGroup.',
       );
     }
 
