@@ -1,6 +1,7 @@
 import 'package:example/group_by_date_example.dart';
 import 'package:example/group_by_date_grid_example.dart';
 import 'package:example/group_by_type_example.dart';
+import 'package:example/jump_to_group_example.dart';
 import 'package:example/reactive_bloc_example.dart';
 import 'package:flutter/material.dart';
 
@@ -36,9 +37,8 @@ class ExampleSelectionPage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: ListView(
           children: [
             const Text(
               'Choose an example to explore:',
@@ -56,6 +56,21 @@ class ExampleSelectionPage extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                     builder: (context) => const ReactiveBlocExample()),
+              ),
+              isNew: true,
+            ),
+            const SizedBox(height: 16),
+            _buildExampleCard(
+              context,
+              title: 'Jump to Group Example',
+              subtitle:
+                  'Shows controller.jumpToGroup with enableAnchoring for Today',
+              icon: Icons.flag,
+              color: Colors.teal,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const JumpToGroupExample()),
               ),
               isNew: true,
             ),
