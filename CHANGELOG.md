@@ -1,9 +1,14 @@
+## 1.3.1 🩹 Anchoring & Example Fixes
+
+- ✨ Added optional `enableAnchoring` plus `InfiniteGroupedListController.jumpToGroup` so apps can programmatically snap to any group header (e.g., "Today").
+- 🛠️ Replaced an invalid `Spacer` usage in the example app's `ListView`, eliminating the `ParentDataWidget` assertion and keeping the showcase aligned with the package API.
+
 ## 1.3.0 🚀 Reactive State Management Support
 
 #### Major Features
 
 - ✨ **NEW**: `InfiniteGroupedList.reactive()` constructor for reactive state management patterns
-- ✨ **NEW**: `InfiniteGroupedList.reactiveGrid()` constructor for grid layouts with reactive patterns  
+- ✨ **NEW**: `InfiniteGroupedList.reactiveGrid()` constructor for grid layouts with reactive patterns
 - 🔌 **Full BLoC/Provider/Riverpod Integration**: Clean separation between event triggering and data listening
 - 🎯 **Event-Driven Architecture**: `onLoadMoreTriggered` callback decouples data fetching from UI events
 - 📡 **External State Support**: Accepts `items`, `isLoading`, `hasReachedMax`, and `error` from external state management
@@ -25,7 +30,7 @@
 #### Developer Experience
 
 - 📚 **Pattern Comparison**: Side-by-side examples of imperative vs reactive patterns
-- 🏗️ **Clean Architecture**: Examples follow modern Flutter architecture best practices  
+- 🏗️ **Clean Architecture**: Examples follow modern Flutter architecture best practices
 - 🎯 **Real-world Simulation**: Mock network calls, pagination limits, and error scenarios
 - 💡 **Clear Documentation**: Comprehensive inline examples and usage patterns
 
