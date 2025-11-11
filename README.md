@@ -27,6 +27,7 @@ Brings together infinite scrolling, group-based item organization, and numerous 
 - **Pull-to-Refresh**: The widget incorporates a pull-to-refresh feature, letting users manually trigger a refresh of the list's content.
 
 - **Sticky Group Headers**: Headers stick to the top of the list as the user scrolls, making it easier to understand the context of the data they're viewing. Can be changed.
+- **Group Anchoring**: Opt-in jump-to-group support lets you instantly scroll to any group (for example "Today") through the controller without impacting base performance.
 
 ### Usage
 
@@ -100,11 +101,36 @@ When using the imperative pattern, `PaginationInfo` provides pagination context:
 
 The InfiniteGroupedList widget is a comprehensive solution for any use case that involves displaying large amounts of data in an organized, easy-to-navigate manner.
 
+### Jumping to a Group
+
+Need to anchor the list to a specific group (e.g. "Today")? Enable anchoring on the widget and invoke the new controller helper:
+
+```dart
+final controller = InfiniteGroupedListController<Transaction, DateTime, String>();
+
+InfiniteGroupedList(
+  enableAnchoring: true,
+  controller: controller,
+  // ... other params
+);
+
+// Later, jump to a concrete title or resolve it dynamically with a predicate
+controller.jumpToGroup(
+  predicate: (title, groupBy) => isSameDay(groupBy, DateTime.now()),
+  alignment: 0.0, // pin the header to the top
+  loadUntilFound: true, // imperative mode only
+);
+```
+
+Anchoring is opt-in, so you only incur the tiny bookkeeping cost when you actually need the feature. The optional `loadUntilFound` flag is available in imperative mode; reactive consumers should trigger their own data loads before retrying the jump.
+
 ### Examples
 
 Explore comprehensive examples demonstrating different usage patterns:
 
 - **🆕 [Reactive BLoC Example](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/reactive_bloc_example.dart)**: Complete implementation using reactive pattern with flutter_bloc, including error handling, loading states, and event-driven architecture.
+
+- **🎯 [Jump to Group Example](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/jump_to_group_example.dart)**: Demonstrates enabling anchoring plus `controller.jumpToGroup()` to instantly scroll to the "Today" section.
 
 - **📅 [Group by Date](https://github.com/esentis/infinite_grouped_list/blob/main/example/lib/group_by_date_example.dart)**: Traditional imperative pattern grouping transactions by date with custom group titles.
 
