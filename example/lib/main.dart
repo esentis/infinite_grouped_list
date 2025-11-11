@@ -113,7 +113,7 @@ class ExampleSelectionPage extends StatelessWidget {
                     builder: (context) => const GroupByDateGridExample()),
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: 24),
             const Card(
               child: Padding(
                 padding: EdgeInsets.all(16.0),
