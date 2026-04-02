@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+if command -v fvm >/dev/null 2>&1; then
+  flutter_cmd=(fvm flutter)
+elif command -v flutter >/dev/null 2>&1; then
+  flutter_cmd=(flutter)
+else
+  echo "pre-push: neither 'fvm' nor 'flutter' is available on PATH." >&2
+  exit 1
+fi
+
+echo "pre-push: running ${flutter_cmd[*]} analyze"
+"${flutter_cmd[@]}" analyze
+
+echo "pre-push: running ${flutter_cmd[*]} test"
+"${flutter_cmd[@]}" test
