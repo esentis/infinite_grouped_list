@@ -127,10 +127,11 @@ controller.jumpToGroup(
   predicate: (title, groupBy) => isSameDay(groupBy, DateTime.now()),
   alignment: 0.0,
   loadUntilFound: true, // imperative mode only
+  maxRetries: 3,
 );
 ```
 
-Anchoring is opt-in, so you only incur the tiny bookkeeping cost when you actually need the feature. The optional `loadUntilFound` flag is available in imperative mode; reactive consumers should trigger their own data loads before retrying the jump.
+Anchoring is opt-in, so you only incur the tiny bookkeeping cost when you actually need the feature. The optional `loadUntilFound` flag is available in imperative mode; reactive consumers should trigger their own data loads before retrying the jump. When `loadUntilFound` is enabled, `maxRetries` limits the extra page loads attempted and defaults to `3`.
 
 ### Examples
 
@@ -148,9 +149,25 @@ Explore comprehensive examples demonstrating different usage patterns:
 
 Run the example app to see all patterns in action with an interactive example selection screen.
 
+### Git Hook
+
+To block pushes when the package does not analyze or test cleanly, install the
+repo-local pre-push hook once:
+
+```bash
+./tool/install_git_hooks.sh
+```
+
+The hook runs:
+
+- `fvm flutter analyze`
+- `fvm flutter test`
+
 ### Migration Guide
 
-**Existing users**: Your current code continues to work without any changes! The new reactive constructors are purely additive.
+**Version 1.4.0 note**: The misspelled `seperatorBuilder` parameter was removed. Use `separatorBuilder` instead.
+
+**Existing users**: If you were not using the misspelled separator parameter, your code continues to work without any further changes.
 
 **Moving to reactive pattern**:
 
