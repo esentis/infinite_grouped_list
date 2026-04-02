@@ -140,7 +140,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
         ),
-        seperatorBuilder: (item) => const Padding(
+        separatorBuilder: (item) => const Padding(
           padding: EdgeInsets.only(bottom: 12.0),
           child: Divider(
             height: 1,

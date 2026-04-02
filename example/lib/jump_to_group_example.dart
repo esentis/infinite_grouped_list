@@ -91,10 +91,10 @@ class _JumpToGroupExampleState extends State<JumpToGroupExample> {
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ),
-        seperatorBuilder: (_) => const Divider(height: 1),
+        separatorBuilder: (_) => const Divider(height: 1),
         itemBuilder: (item) => ListTile(
           leading: CircleAvatar(
-            backgroundColor: Colors.teal.withOpacity(0.1),
+            backgroundColor: Colors.teal.withValues(alpha: 0.1),
             child: Icon(item.icon, color: Colors.teal),
           ),
           title: Text(item.name),
