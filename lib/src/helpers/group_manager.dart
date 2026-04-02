@@ -1,6 +1,4 @@
-// lib/src/helpers/group_manager.dart
-
-import 'package:infinite_grouped_list/infinite_grouped_list.dart';
+import 'package:infinite_grouped_list/src/helpers/pagination_info.dart';
 
 /// A helper class that centralizes grouping, merging, sorting, and removal logic
 /// for the InfiniteGroupedList.
@@ -76,6 +74,43 @@ class GroupManager<ItemType, GroupBy, GroupTitle> {
       groups.remove(key);
     }
     allItems.removeWhere(predicate);
+  }
+
+  /// Removes the first matching [item] from [groups] and [allItems].
+  ///
+  /// Returns true when an item was removed.
+  bool removeItem(
+    Map<GroupTitle, List<ItemType>> groups,
+    List<ItemType> allItems,
+    ItemType item,
+  ) {
+    GroupTitle? emptyGroup;
+    var removed = false;
+
+    for (final entry in groups.entries) {
+      final index = entry.value.indexOf(item);
+      if (index == -1) {
+        continue;
+      }
+
+      entry.value.removeAt(index);
+      removed = true;
+
+      if (entry.value.isEmpty) {
+        emptyGroup = entry.key;
+      }
+      break;
+    }
+
+    if (!removed) {
+      return false;
+    }
+
+    allItems.remove(item);
+    if (emptyGroup != null) {
+      groups.remove(emptyGroup);
+    }
+    return true;
   }
 
   void _sortAll(Map<GroupTitle, List<ItemType>> groups) {
