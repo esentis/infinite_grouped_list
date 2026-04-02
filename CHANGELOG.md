@@ -1,168 +1,232 @@
-## 1.3.1 🩹 Anchoring & Example Fixes
+## 1.4.0
 
-- ✨ Added optional `enableAnchoring` plus `InfiniteGroupedListController.jumpToGroup` so apps can programmatically snap to any group header (e.g., "Today").
-- 🛠️ Replaced an invalid `Spacer` usage in the example app's `ListView`, eliminating the `ParentDataWidget` assertion and keeping the showcase aligned with the package API.
+### Added
 
-## 1.3.0 🚀 Reactive State Management Support
+- Expanded package-level test coverage across pagination, refresh, reactive loading, anchoring, helper classes, and empty/error states.
+- Added `maxRetries` to `jumpToGroup(loadUntilFound: true)` so callers can cap extra page loads explicitly.
 
-#### Major Features
+### Changed
 
-- ✨ **NEW**: `InfiniteGroupedList.reactive()` constructor for reactive state management patterns
-- ✨ **NEW**: `InfiniteGroupedList.reactiveGrid()` constructor for grid layouts with reactive patterns
-- 🔌 **Full BLoC/Provider/Riverpod Integration**: Clean separation between event triggering and data listening
-- 🎯 **Event-Driven Architecture**: `onLoadMoreTriggered` callback decouples data fetching from UI events
-- 📡 **External State Support**: Accepts `items`, `isLoading`, `hasReachedMax`, and `error` from external state management
+- Moved tooling packages out of runtime dependencies.
 
-#### API Enhancements
+### Fixed
 
-- 🎛️ **Smart Controller Behavior**: Controller methods automatically adapt to reactive vs imperative mode
-- 🚫 **Safety Guards**: Controller throws helpful errors when using imperative methods in reactive mode
-- 🔄 **Reactive Lifecycle**: Automatic updates when external state changes via `didUpdateWidget`
-- ⚡ **Performance Optimized**: Efficient reactive data handling without unnecessary rebuilds
+- Fixed controller rebinding and external `ScrollController` ownership so parent-managed controllers are no longer disposed by the widget.
+- Prevented duplicate reactive `onLoadMoreTriggered` dispatches while a reactive load is already pending.
+- Stopped `jumpToGroup(loadUntilFound: true)` from retrying forever after load failures.
+  - There is also optional `maxRetries` parameter to cap the extra page loads defaulting to `3`.
 
-#### Example Project Improvements
+### Breaking Changes
 
-- 📱 **Comprehensive BLoC Example**: Full-featured reactive example with mock API, error handling, and loading states
-- 🧭 **Enhanced Navigation**: Example selection screen with beautiful cards and proper navigation
-- 🎨 **Rich UI Components**: Category-based grouping with colored icons, sticky headers, and animations
-- 🔄 **Refresh Patterns**: Demonstrates both pull-to-refresh and manual refresh in reactive mode
+- Removed the misspelled `seperatorBuilder` API. Use `separatorBuilder`.
 
-#### Developer Experience
+## 1.3.1
 
-- 📚 **Pattern Comparison**: Side-by-side examples of imperative vs reactive patterns
-- 🏗️ **Clean Architecture**: Examples follow modern Flutter architecture best practices
-- 🎯 **Real-world Simulation**: Mock network calls, pagination limits, and error scenarios
-- 💡 **Clear Documentation**: Comprehensive inline examples and usage patterns
+### Added
 
-#### Breaking Changes
+- Added optional `enableAnchoring` plus `InfiniteGroupedListController.jumpToGroup` so apps can programmatically snap to any group header, such as "Today".
 
-- None! Fully backward compatible with existing imperative usage
+### Fixed
 
-## 1.2.11 ⬆️ Upgrade dependencies
+- Replaced an invalid `Spacer` usage in the example app's `ListView`, eliminating the `ParentDataWidget` assertion and keeping the showcase aligned with the package API.
 
-- Upgraded dependencies to the latest versions
+## 1.3.0
+
+### Added
+
+- Added `InfiniteGroupedList.reactive()` for reactive state management patterns.
+- Added `InfiniteGroupedList.reactiveGrid()` for grid layouts with reactive patterns.
+- Added external state support through `items`, `isLoading`, `hasReachedMax`, and `error`.
+- Added a comprehensive reactive BLoC example with mock API, error handling, and loading states.
+
+### Changed
+
+- Improved controller behavior so it adapts automatically to reactive versus imperative mode.
+- Added safety guards so controller mutation methods throw helpful errors in reactive mode.
+- Improved lifecycle handling so reactive widgets update when external state changes through `didUpdateWidget`.
+- Optimized reactive data handling to avoid unnecessary rebuilds.
+- Expanded the example app with richer navigation, more polished UI, and clearer pattern comparison.
+- Improved the documentation with more complete usage guidance and architectural examples.
+
+### Breaking Changes
+
+- None.
+
+## 1.2.11
+
+### Changed
+
+- Upgraded dependencies to newer versions.
 
 ## 1.2.10
 
-- ✨ Added `scrollController` to all constructors, you can now pass your own scroll controller
+### Added
+
+- Added `scrollController` to all constructors so callers can provide their own scroll controller.
 
 ## 1.2.9
 
-#### Performance Improvements
+### Added
 
-- ⚡ Optimized group operations with targeted updates instead of full regrouping
-- 🧠 Reduced memory usage by avoiding unnecessary data structure recreation
-- 🚀 Implemented efficient item addition with selective group updates
-- 🗑️ Optimized item removal with targeted group processing
+- Added helper methods for group management: `_sortSingleGroup`, `_addItemsToGroups`, and `_createInitialGroups`.
 
-#### Bug Fixes
+### Changed
 
-- 🔍 Fixed potential memory leaks by properly clearing controller callbacks
-- 🎯 Improved scroll performance for large datasets
-- 🔄 Enhanced refresh operation efficiency
+- Optimized group operations with targeted updates instead of full regrouping.
+- Reduced memory usage by avoiding unnecessary data structure recreation.
+- Implemented more efficient item addition with selective group updates.
+- Optimized item removal with targeted group processing.
+- Improved refresh operation efficiency.
 
-#### API Improvements
+### Fixed
 
-- ✨ Added helper methods for group management (`_sortSingleGroup`, `_addItemsToGroups`, `_createInitialGroups`)
-- 📊 Better handling of empty groups after item removal
+- Fixed potential memory leaks by properly clearing controller callbacks.
+- Improved scroll performance for large datasets.
+- Improved handling of empty groups after item removal.
 
-## 1.2.8 🐛 Bug fixes
+## 1.2.8
 
-- Fixes hashValues deprecated issues
+### Fixed
 
-## 1.2.7 ✨ New Features
+- Fixed deprecated `hashValues` usage.
 
-- Adds `addItems` method in `InfiniteGroupedListController`
-- Adds `removeWhere` method in `InfiniteGroupedListController`
-- Hides internal methods in `InfiniteGroupedListController`
+## 1.2.7
 
-## 1.2.6 ✨ New Features
+### Added
 
-- Adds a new `limit` parameter in `InfiniteGroupedListController` to tell the library how much items are expected from the remote call
-- Adds a callback `onNoMoreItemsFound` that is triggered when the response returns less items than the provided `limit`
+- Added `addItems` to `InfiniteGroupedListController`.
+- Added `removeWhere` to `InfiniteGroupedListController`.
 
-## 1.2.5 ♻️ Refactoring
+### Changed
 
-- Refactors `InfiniteGroupedListController` to avoid `LateInitializationErrors`
+- Hid internal methods in `InfiniteGroupedListController`.
 
-## 1.2.4 🐛 Bug fixes
+## 1.2.6
 
-- Adds missing `showRefreshIndicator` from default constructor
+### Added
 
-## 1.2.3 ✨ New Features
+- Added `limit` to `InfiniteGroupedListController` to define the expected page size from remote calls.
+- Added `onNoMoreItemsFound`, which is triggered when the response contains fewer items than the configured `limit`.
 
-- Adds `showRefreshIndicator` flag which defaults to `true`
+## 1.2.5
 
-## 1.2.2 ✨ New Features
+### Changed
 
-- Adds missing `Key`
+- Refactored `InfiniteGroupedListController` to avoid `LateInitializationError`s.
 
-## 1.2.1 ✨ New Features
+## 1.2.4
 
-- Adds `remove(ItemType)` method to the controller. You can now programmatically remove items from the list.
+### Fixed
 
-## 1.2.0 💥 Breaking changes
+- Added missing `showRefreshIndicator` support to the default constructor.
 
-- Tweaks `initialItemsErrorWidget` & `loadMoreItemsErrorWidget` parameters. They are now function that returns a `Widget`, exposing the error aswell :
+## 1.2.3
+
+### Added
+
+- Added `showRefreshIndicator`, which defaults to `true`.
+
+## 1.2.2
+
+### Added
+
+- Added missing `Key` support.
+
+## 1.2.1
+
+### Added
+
+- Added `remove(ItemType)` to the controller so items can be removed programmatically.
+
+## 1.2.0
+
+### Added
+
+- Added the `physics` parameter. It defaults to `AlwaysScrollablePhysics`.
+
+### Changed
+
+- Tweaked `initialItemsErrorWidget` and `loadMoreItemsErrorWidget`. They now accept the error and return a `Widget`.
 
 ```dart
-        initialItemsErrorWidget: (error) => GestureDetector(
-          child: Text(
-            error.toString(),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              decoration: TextDecoration.underline,
-              decorationColor: Colors.blue,
-              color: Colors.blue,
-            ),
-          ),
-        ),
-        loadMoreItemsErrorWidget: (error) => GestureDetector(
-          child: Text(
-            error.toString(),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              decoration: TextDecoration.underline,
-              decorationColor: Colors.blue,
-              color: Colors.blue,
-            ),
-          ),
-        ),
+initialItemsErrorWidget: (error) => GestureDetector(
+  child: Text(
+    error.toString(),
+    textAlign: TextAlign.center,
+    style: const TextStyle(
+      fontSize: 15,
+      fontWeight: FontWeight.w500,
+      decoration: TextDecoration.underline,
+      decorationColor: Colors.blue,
+      color: Colors.blue,
+    ),
+  ),
+),
+loadMoreItemsErrorWidget: (error) => GestureDetector(
+  child: Text(
+    error.toString(),
+    textAlign: TextAlign.center,
+    style: const TextStyle(
+      fontSize: 15,
+      fontWeight: FontWeight.w500,
+      decoration: TextDecoration.underline,
+      decorationColor: Colors.blue,
+      color: Colors.blue,
+    ),
+  ),
+),
 ```
 
-- Adds `physics` parameter. Defaults to [AlwaysScrollablePhysics]
+### Breaking Changes
+
+- `initialItemsErrorWidget` and `loadMoreItemsErrorWidget` now receive the error and must return a widget.
 
 ## 1.1.2
 
-- Initializes `getItems` with default empty List to avoid `LateInitializationError`
-- Internal code refactoring
+### Fixed
+
+- Initialized `getItems` with a default empty list to avoid `LateInitializationError`.
+
+### Changed
+
+- Internal code refactoring.
 
 ## 1.1.1
 
-- Internal code refactoring
+### Changed
 
-## 1.1.0 ✨ New Features - Simplifies & Improves API
+- Internal code refactoring.
 
-- Adds new builder `InfiniteGroupedList.gridView`.
-  Define your `gridDelegate` and customise it as you want.
+## 1.1.0
+
+### Added
+
+- Added `InfiniteGroupedList.gridView`.
 
 <img src='https://i.imgur.com/hRv7sEq.gif' height=550>
 
-- Fields made optional:
-  - `seperatorBuilder`
-  - `sortGroupBy`
-- Removes the `padding` that was not removed on previous version.
+### Changed
 
-## 1.0.1 🐛 Bug fixes & API improvements
+- Made `separatorBuilder` optional.
+- Made `sortGroupBy` optional.
 
-- Removes `padding` parameter as it does not correspond to anything
-- Adds `isPaged` parameter. If the `onLoadMore` is not paged, everytime the same items will be added to the list when the list reaches at the bottom. Therefore, we should set the `isPaged` to `false` and after the initial fetch it will stop fetching the items. It defaults to `true`
-- Checks if `mounted` before setting state
+### Fixed
 
-## 1.0.0 🎉 Initial release
+- Removed the padding that was not removed in the previous version.
 
-- Initial release
+## 1.0.1
+
+### Added
+
+- Added `isPaged`. When `onLoadMore` is not paged, set this to `false` to prevent the same items from being appended repeatedly. It defaults to `true`.
+
+### Fixed
+
+- Removed the unused `padding` parameter.
+- Added a `mounted` check before calling `setState`.
+
+## 1.0.0
+
+### Added
+
+- Initial release.
