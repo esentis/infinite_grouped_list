@@ -1166,6 +1166,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
                     (context, i) {
                       final item = groupedItems[title]![i];
                       return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           widget.itemBuilder(item),
                           if (widget.separatorBuilder != null)
@@ -1186,6 +1187,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
                     (context, i) {
                       final item = groupedItems[title]![i];
                       return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           widget.itemBuilder(item),
                           if (widget.separatorBuilder != null)
