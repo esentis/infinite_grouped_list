@@ -1,3 +1,9 @@
+## 1.4.1
+
+### Fixed
+
+- List items now stretch to the full cross-axis width. Previously, items were centered with intrinsic width. Wrap items in `Center` if you relied on the old behavior.
+
 ## 1.4.0
 
 ### Added
