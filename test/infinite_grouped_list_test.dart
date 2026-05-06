@@ -140,6 +140,40 @@ Widget _buildReactiveList({
 }
 
 void main() {
+  testWidgets('list items receive full cross-axis constraints',
+      (WidgetTester tester) async {
+    final controller = InfiniteGroupedListController<String, String, String>();
+    const itemKey = Key('item');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Center(
+          child: SizedBox(
+            width: 360,
+            height: 320,
+            child: InfiniteGroupedList<String, String, String>(
+              controller: controller,
+              showGroups: false,
+              showRefreshIndicator: false,
+              onLoadMore: (_) async => <String>['Item 1'],
+              groupBy: (_) => 'group',
+              groupCreator: (groupBy) => groupBy,
+              groupTitleBuilder: (_, __, ___, ____) => const SizedBox.shrink(),
+              itemBuilder: (_) => const SizedBox(
+                key: itemKey,
+                width: 120,
+                height: 48,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.getSize(find.byKey(itemKey)).width, 360);
+  });
+
   test('controller jumpToGroup validates its arguments', () {
     final controller = InfiniteGroupedListController<String, String, String>();
 
