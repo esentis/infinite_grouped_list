@@ -453,7 +453,8 @@ void main() {
     await tester.pump();
 
     // Let the in-flight load-more settle; refresh must still perform its reload.
-    secondPageCompleter.complete(List<String>.generate(20, (index) => 'B$index'));
+    secondPageCompleter
+        .complete(List<String>.generate(20, (index) => 'B$index'));
     await loadFuture;
     await refreshFuture;
     await tester.pumpAndSettle();
@@ -461,6 +462,43 @@ void main() {
     expect(loadedOffsets, hasLength(3));
     expect(loadedOffsets.last, 0);
     expect(controller.getItems(), orderedEquals(<String>['Refreshed']));
+  });
+
+  testWidgets(
+      'separator renders between items but not after the last item of a group',
+      (WidgetTester tester) async {
+    final controller = InfiniteGroupedListController<String, String, String>();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          height: 800,
+          child: InfiniteGroupedList<String, String, String>(
+            controller: controller,
+            showRefreshIndicator: false,
+            onLoadMore: (_) async => <String>['G1-a', 'G1-b', 'G1-c', 'G2-a'],
+            groupBy: (item) => item.split('-').first,
+            groupCreator: (groupBy) => groupBy,
+            groupTitleBuilder: (title, _, __, ___) => SizedBox(
+              height: 24,
+              child: Text('H:$title'),
+            ),
+            separatorBuilder: (_) => const Divider(height: 1),
+            itemBuilder: (item) => SizedBox(height: 40, child: Text(item)),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // All items are laid out inside the tall viewport.
+    expect(find.text('G1-a'), findsOneWidget);
+    expect(find.text('G1-c'), findsOneWidget);
+    expect(find.text('G2-a'), findsOneWidget);
+
+    // Group G1 (3 items) has 2 separators, group G2 (1 item) has none, so a
+    // trailing separator after the last item of each group would over-count.
+    expect(find.byType(Divider), findsNWidgets(2));
   });
 
   testWidgets('controller replacement detaches old controller callbacks',

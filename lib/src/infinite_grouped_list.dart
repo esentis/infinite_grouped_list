@@ -511,15 +511,30 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// Return the field of the item that you want to group by.
   ///
   /// Will be used by the [groupCreator] to create the title of the group.
+  ///
+  /// Prefer a stable reference (e.g. a top-level function or a method), not a
+  /// closure created inline in `build`. In imperative mode a new [groupBy],
+  /// [groupCreator], or [sortGroupBy] reference is treated as a grouping change
+  /// and triggers a full re-group of the currently loaded items.
   final GroupBy Function(ItemType item) groupBy;
 
   /// Using the [groupBy] value, you can define how the group title should be created.
+  ///
+  /// See [groupBy] for why this should be a stable reference.
   final GroupTitle Function(GroupBy groupBy) groupCreator;
 
-  /// You can define the field of which the items inside the groups should be sorted by.
+  /// Defines the field the items **inside** each group are sorted by.
+  ///
+  /// This only orders items within a group; it does not reorder the groups
+  /// themselves. Groups are displayed in the order each group is first
+  /// encountered in the loaded data. See [groupBy] for why this should be a
+  /// stable reference.
   final InfiniteGroupedListSort<ItemType>? sortGroupBy;
 
-  /// The sort order of the items inside the groups.
+  /// The sort order applied by [sortGroupBy] to the items **inside** each group.
+  ///
+  /// This does not affect the order of the groups themselves, which follows the
+  /// order in which each group is first encountered in the loaded data.
   final SortOrder groupSortOrder;
 
   /// The color of the refresh indicator
@@ -1175,11 +1190,15 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
                   delegate: SliverChildBuilderDelegate(
                     (context, i) {
                       final item = groupedItems[title]![i];
+                      final isLastInGroup =
+                          i == groupedItems[title]!.length - 1;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           widget.itemBuilder(item),
-                          if (widget.separatorBuilder != null)
+                          // Separator goes *between* items, so skip it after the
+                          // last item of each group.
+                          if (widget.separatorBuilder != null && !isLastInGroup)
                             widget.separatorBuilder!(item),
                         ],
                       );
@@ -1196,11 +1215,15 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
                   delegate: SliverChildBuilderDelegate(
                     (context, i) {
                       final item = groupedItems[title]![i];
+                      final isLastInGroup =
+                          i == groupedItems[title]!.length - 1;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           widget.itemBuilder(item),
-                          if (widget.separatorBuilder != null)
+                          // Separator goes *between* items, so skip it after the
+                          // last item of each group.
+                          if (widget.separatorBuilder != null && !isLastInGroup)
                             widget.separatorBuilder!(item),
                         ],
                       );
