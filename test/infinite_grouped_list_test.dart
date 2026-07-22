@@ -413,6 +413,56 @@ void main() {
     expect(controller.getItems(), orderedEquals(<String>['Item 2']));
   });
 
+  testWidgets('refresh reloads even when a load-more is already in flight',
+      (WidgetTester tester) async {
+    final controller = InfiniteGroupedListController<String, String, String>();
+    final secondPageCompleter = Completer<List<String>>();
+    final loadedOffsets = <int>[];
+
+    Future<List<String>> onLoadMore(PaginationInfo paginationInfo) {
+      loadedOffsets.add(paginationInfo.offset);
+      if (loadedOffsets.length == 1) {
+        return Future<List<String>>.value(
+          List<String>.generate(20, (index) => 'A$index'),
+        );
+      }
+      if (loadedOffsets.length == 2) {
+        // Scroll-triggered load-more that stays pending while refresh fires.
+        return secondPageCompleter.future;
+      }
+      // The reload triggered by refresh().
+      return Future<List<String>>.value(<String>['Refreshed']);
+    }
+
+    await tester.pumpWidget(
+      _buildImperativeList(
+        controller: controller,
+        onLoadMore: onLoadMore,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(loadedOffsets, orderedEquals(<int>[0]));
+
+    // Kick off a load-more that will not complete yet.
+    final loadFuture = controller.loadItems();
+    await tester.pump();
+    expect(loadedOffsets, hasLength(2));
+
+    // Refresh while the load-more is still in flight.
+    final refreshFuture = controller.refresh();
+    await tester.pump();
+
+    // Let the in-flight load-more settle; refresh must still perform its reload.
+    secondPageCompleter.complete(List<String>.generate(20, (index) => 'B$index'));
+    await loadFuture;
+    await refreshFuture;
+    await tester.pumpAndSettle();
+
+    expect(loadedOffsets, hasLength(3));
+    expect(loadedOffsets.last, 0);
+    expect(controller.getItems(), orderedEquals(<String>['Refreshed']));
+  });
+
   testWidgets('controller replacement detaches old controller callbacks',
       (WidgetTester tester) async {
     final oldController =
