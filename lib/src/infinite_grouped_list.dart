@@ -1048,6 +1048,16 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
       return;
     }
 
+    // A page load already in flight (for example a scroll-triggered load-more)
+    // occupies the same _trackPageLoad slot, so calling _loadFirstPage now would
+    // just return that unrelated future and silently skip the refresh. Wait for
+    // it to settle first, mirroring the guard used in _jumpToGroup, so the reload
+    // below actually resets pagination and re-fetches the first page.
+    final activeLoad = _activePageLoad;
+    if (activeLoad != null) {
+      await activeLoad;
+    }
+
     await _loadFirstPage();
   }
 
