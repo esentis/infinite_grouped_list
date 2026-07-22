@@ -15,7 +15,7 @@ lists with sticky headers. It supports:
 - sticky group headers
 - optional jump-to-group anchoring through the controller
 
-Current package version: `1.4.0`
+Current package version: `1.4.2`
 
 ## Tooling And Commands
 
