@@ -1,3 +1,19 @@
+## 1.4.2
+
+### Fixed
+
+- Separators from `separatorBuilder` are no longer drawn after the last item of each group. Previously a trailing separator appeared beneath the final item of every group (just above the next header); separators now appear only _between_ items, matching the documented intent and `ListView.separated` semantics. This applies to both list and grid layouts. If you relied on the trailing separator, add the spacing via the group header or item padding instead.
+
+Previous vs current behaviour:
+![image](https://i.ibb.co/20G4sX9L/Screenshot-2026-07-23-at-12-48-57-AM.png)
+
+- `refresh()` (pull-to-refresh and `controller.refresh()`) is no longer silently skipped when a scroll-triggered load-more is still in flight. The refresh now waits for the pending load to settle and then resets pagination and re-fetches the first page.
+
+### Docs
+
+- Clarified that `sortGroupBy` / `groupSortOrder` sort items **within** each group, while the order of the groups themselves follows the order in which each group is first encountered in the loaded data.
+- Documented that grouping callbacks (`groupBy`, `groupCreator`, `sortGroupBy`) should be stable references to avoid unnecessary re-grouping on parent rebuilds.
+
 ## 1.4.1
 
 ### Fixed
