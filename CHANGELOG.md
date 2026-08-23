@@ -1,3 +1,41 @@
+## 1.4.3
+
+### Fixed
+
+- Default empty-state, initial-error, and load-more-error texts now follow the
+  active `Theme` instead of hardcoding `Colors.black`, which rendered them
+  barely visible on dark themes. The empty text uses `colorScheme.onSurface`
+  and both error texts use `colorScheme.error`. Custom widgets and error
+  builders are unaffected.
+- Sorting items **within** a group is now stable. Dart's `List.sort` is not a
+  stable sort, so items whose sort keys compared equal could silently reorder
+  whenever their group was re-sorted as new pages were merged in. Equal-keyed
+  items now deterministically keep the order in which they arrived, across
+  pagination, refreshes, re-groups, and item removals.
+- An internally owned `ScrollController` is now disposed after the current
+  frame ends. Swapping from an internal controller to an external one no
+  longer risks the child `Scrollable` touching a disposed controller while it
+  releases its scroll position.
+
+### Changed
+
+- Removed unused internal pagination helper methods. No public API impact.
+
+### Docs
+
+- Removed a stale `[padding]` reference from the constructor documentation;
+  that parameter was removed in an earlier release.
+- The controller documentation now lists all of its capabilities (`getItems`,
+  `loadItems`, `refresh`, `addItems`, `remove`, `removeWhere`,
+  `jumpToGroup`) instead of only the original three.
+- Fixed typos in doc comments ("seperator" → "separator", "grpup" → "group").
+
+### Testing
+
+- Added regression tests for dark-theme default text colors, sort stability
+  with equal keys (unit-level through `GroupManager` and widget-level across
+  paginated loads), and internal-to-external scroll controller swap lifecycle.
+
 ## 1.4.2
 
 ### Fixed
