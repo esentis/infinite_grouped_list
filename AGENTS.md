@@ -15,7 +15,7 @@ lists with sticky headers. It supports:
 - sticky group headers
 - optional jump-to-group anchoring through the controller
 
-Current package version: `1.4.3`
+Current package version: `1.5.0`
 
 ## Tooling And Commands
 
@@ -59,6 +59,9 @@ Important public API details:
 
 - `separatorBuilder` is the correct separator parameter name.
 - The old typo `seperatorBuilder` was removed in `1.4.0`.
+- `itemKeyBuilder` enables keyed child reuse via `findChildIndexCallback`;
+  provided keys must be unique among currently loaded items.
+- Reactive mode re-groups immediately when grouping callbacks change.
 - `sortGroupBy` must return a `Comparable`.
 - `onRefresh` accepts sync or async callbacks via `FutureOr<void>`.
 - `jumpToGroup(...)` requires `enableAnchoring: true`.

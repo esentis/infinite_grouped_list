@@ -1,3 +1,23 @@
+## 1.5.0
+
+### Added
+
+- Added `itemKeyBuilder` to all four constructors. When provided, each item row is keyed and the sliver delegates use `findChildIndexCallback`, so inserting or removing items preserves the element (and its `State`) of the remaining items instead of shifting it onto their neighbours — animations, text controllers, and scroll positions inside tiles survive list mutations. Keys must be unique among the currently loaded items.
+- Added `==`, `hashCode`, `toString`, and `copyWith` to `PaginationInfo`.
+
+### Changed
+
+- Error-related parameters and fields (`initialItemsErrorWidget`, `loadMoreItemsErrorWidget`, the reactive `error`, and reactive `errorWidget`) are now typed `Object?` instead of `dynamic`. Existing call sites remain source-compatible.
+
+### Fixed
+
+- Reactive mode (`.reactive()` / `.reactiveGrid()`) now re-groups items immediately when `groupBy`, `groupCreator`, `sortGroupBy`, or `groupSortOrder` change, matching imperative-mode behaviour. Previously the list kept rendering with the old grouping until the next external data update arrived.
+
+### Docs
+
+- Documented that anchoring identifies groups by their `GroupTitle` value, so `GroupTitle` should implement `==` and `hashCode` consistently for `jumpToGroup` to resolve reliably.
+- Documented that with paging enabled and loaded content shorter than the viewport, additional pages are fetched automatically as the user scrolls until the viewport fills.
+
 ## 1.4.3
 
 ### Fixed
