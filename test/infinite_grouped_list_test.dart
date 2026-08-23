@@ -15,6 +15,33 @@ class _TrackingScrollController extends ScrollController {
   }
 }
 
+/// Renders `<item>:<tapCount>` so a test can tell an *element that kept its
+/// state* (counter survives) from a *freshly created* element for the same
+/// item (counter resets to zero).
+class _CounterTile extends StatefulWidget {
+  const _CounterTile(this.item);
+
+  final String item;
+
+  @override
+  State<_CounterTile> createState() => _CounterTileState();
+}
+
+class _CounterTileState extends State<_CounterTile> {
+  int _taps = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: TextButton(
+        onPressed: () => setState(() => _taps++),
+        child: Text('${widget.item}:$_taps'),
+      ),
+    );
+  }
+}
+
 Widget _buildImperativeList({
   required InfiniteGroupedListController<String, String, String> controller,
   required Future<List<String>> Function(PaginationInfo paginationInfo)
@@ -1191,6 +1218,148 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(externalScrollController.hasClients, isFalse);
+  });
+  testWidgets(
+      'itemKeyBuilder preserves item state when an earlier item is removed',
+      (WidgetTester tester) async {
+    final controller = InfiniteGroupedListController<String, String, String>();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          height: 320,
+          child: InfiniteGroupedList<String, String, String>(
+            controller: controller,
+            showRefreshIndicator: false,
+            onLoadMore: (_) async => <String>['A0', 'A1', 'A2'],
+            groupBy: (_) => 'group',
+            groupCreator: (groupBy) => groupBy,
+            groupTitleBuilder: (_, __, ___, ____) => const SizedBox(height: 32),
+            itemBuilder: (item) => _CounterTile(item),
+            itemKeyBuilder: (item) => ValueKey<String>(item),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('A0:0'), findsOneWidget);
+    expect(find.text('A1:0'), findsOneWidget);
+    expect(find.text('A2:0'), findsOneWidget);
+
+    // Give the surviving tiles some state to lose.
+    await tester.tap(find.text('A1:0'));
+    await tester.tap(find.text('A2:0'));
+    await tester.pumpAndSettle();
+    expect(find.text('A1:1'), findsOneWidget);
+    expect(find.text('A2:1'), findsOneWidget);
+
+    controller.remove('A0');
+    await tester.pumpAndSettle();
+
+    // Without findChildIndexCallback, the elements for A1/A2 would be
+    // recreated at their shifted indices and their tap counters would reset.
+    expect(find.text('A0:1'), findsNothing);
+    expect(find.text('A1:0'), findsNothing);
+    expect(find.text('A1:1'), findsOneWidget);
+    expect(find.text('A2:1'), findsOneWidget);
+  });
+
+  testWidgets(
+      'itemKeyBuilder preserves item state in grid when an earlier item is removed',
+      (WidgetTester tester) async {
+    final controller = InfiniteGroupedListController<String, String, String>();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          height: 320,
+          child: InfiniteGroupedList<String, String, String>.gridView(
+            controller: controller,
+            onLoadMore: (_) async => <String>['G0', 'G1', 'G2'],
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 4,
+              crossAxisSpacing: 4,
+              childAspectRatio: 3,
+            ),
+            groupBy: (_) => 'grid',
+            groupCreator: (groupBy) => groupBy,
+            groupTitleBuilder: (_, __, ___, ____) => const SizedBox(height: 32),
+            itemBuilder: (item) => _CounterTile(item),
+            itemKeyBuilder: (item) => ValueKey<String>(item),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('G0:0'), findsOneWidget);
+    expect(find.text('G2:0'), findsOneWidget);
+
+    await tester.tap(find.text('G1:0'));
+    await tester.tap(find.text('G2:0'));
+    await tester.pumpAndSettle();
+    expect(find.text('G2:1'), findsOneWidget);
+
+    controller.remove('G0');
+    await tester.pumpAndSettle();
+
+    expect(find.text('G0:0'), findsNothing);
+    expect(find.text('G1:0'), findsNothing);
+    expect(find.text('G1:1'), findsOneWidget);
+    expect(find.text('G2:1'), findsOneWidget);
+  });
+
+  testWidgets('reactive mode re-groups immediately when grouping changes',
+      (WidgetTester tester) async {
+    final controller = InfiniteGroupedListController<String, String, String>();
+
+    Widget buildWith(String Function(String item) groupBy,
+        {List<String> items = const <String>['A-1', 'B-1']}) {
+      return MaterialApp(
+        home: SizedBox(
+          height: 320,
+          child: InfiniteGroupedList<String, String, String>.reactive(
+            controller: controller,
+            items: items,
+            isLoading: false,
+            hasReachedMax: true,
+            onLoadMoreTriggered: () {},
+            groupBy: groupBy,
+            groupCreator: (groupBy) => groupBy,
+            groupTitleBuilder: (title, _, __, ___) => Text('Header $title'),
+            itemBuilder: (item) => Text(item),
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(buildWith((_) => 'all'));
+    await tester.pumpAndSettle();
+    expect(find.text('Header all'), findsOneWidget);
+
+    // Only the grouping callbacks change; the external data stays identical.
+    await tester.pumpWidget(
+      buildWith((item) => item.split('-').first),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Header all'), findsNothing);
+    expect(find.text('Header A'), findsOneWidget);
+    expect(find.text('Header B'), findsOneWidget);
+
+    // A subsequent external data update must keep using the new grouping.
+    await tester.pumpWidget(
+      buildWith(
+        (item) => item.split('-').first,
+        items: const <String>['A-1', 'A-2', 'B-1'],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Header A'), findsOneWidget);
+    expect(find.text('A-2'), findsOneWidget);
   });
 
   testWidgets(

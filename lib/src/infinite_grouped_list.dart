@@ -45,12 +45,13 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
         onLoadMore,
     InfiniteGroupedListSort<ItemType>? sortGroupBy,
     Widget Function(ItemType)? separatorBuilder,
+    Key Function(ItemType item)? itemKeyBuilder,
     bool isPaged = true,
     InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
     InfiniteGroupedListRefreshCallback? onRefresh,
     Widget? noItemsFoundWidget,
-    Widget Function(dynamic error)? initialItemsErrorWidget,
-    Widget Function(dynamic error)? loadMoreItemsErrorWidget,
+    Widget Function(Object? error)? initialItemsErrorWidget,
+    Widget Function(Object? error)? loadMoreItemsErrorWidget,
     SortOrder groupSortOrder = SortOrder.descending,
     bool stickyGroups = true,
     Widget loadingWidget = const Center(
@@ -73,6 +74,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       groupCreator: groupCreator,
       sortGroupBy: sortGroupBy,
       separatorBuilder: separatorBuilder,
+      itemKeyBuilder: itemKeyBuilder,
       isPaged: isPaged,
       controller: controller ?? InfiniteGroupedListController(),
       onRefresh: onRefresh,
@@ -111,12 +113,13 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     InfiniteGroupedListSort<ItemType>? sortGroupBy,
     SliverGridDelegate? gridDelegate,
     Widget Function(ItemType)? separatorBuilder,
+    Key Function(ItemType item)? itemKeyBuilder,
     bool isPaged = true,
     InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
     InfiniteGroupedListRefreshCallback? onRefresh,
     Widget? noItemsFoundWidget,
-    Widget Function(dynamic error)? initialItemsErrorWidget,
-    Widget Function(dynamic error)? loadMoreItemsErrorWidget,
+    Widget Function(Object? error)? initialItemsErrorWidget,
+    Widget Function(Object? error)? loadMoreItemsErrorWidget,
     SortOrder groupSortOrder = SortOrder.descending,
     bool stickyGroups = true,
     Widget loadingWidget = const Center(
@@ -140,6 +143,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       groupCreator: groupCreator,
       sortGroupBy: sortGroupBy,
       separatorBuilder: separatorBuilder,
+      itemKeyBuilder: itemKeyBuilder,
       isPaged: isPaged,
       controller: controller ?? InfiniteGroupedListController(),
       onRefresh: onRefresh,
@@ -205,11 +209,12 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     bool? showGroups,
     InfiniteGroupedListSort<ItemType>? sortGroupBy,
     Widget Function(ItemType)? separatorBuilder,
+    Key Function(ItemType item)? itemKeyBuilder,
     InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
     InfiniteGroupedListRefreshCallback? onRefresh,
     Widget? noItemsFoundWidget,
-    dynamic error,
-    Widget Function(dynamic error)? errorWidget,
+    Object? error,
+    Widget Function(Object? error)? errorWidget,
     SortOrder groupSortOrder = SortOrder.descending,
     bool stickyGroups = true,
     Widget loadingWidget = const Center(
@@ -237,6 +242,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       groupCreator: groupCreator,
       sortGroupBy: sortGroupBy,
       separatorBuilder: separatorBuilder,
+      itemKeyBuilder: itemKeyBuilder,
       controller: controller ?? InfiniteGroupedListController(),
       onRefresh: onRefresh,
       noItemsFoundWidget: noItemsFoundWidget,
@@ -303,11 +309,12 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     bool? showGroups,
     InfiniteGroupedListSort<ItemType>? sortGroupBy,
     Widget Function(ItemType)? separatorBuilder,
+    Key Function(ItemType item)? itemKeyBuilder,
     InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
     InfiniteGroupedListRefreshCallback? onRefresh,
     Widget? noItemsFoundWidget,
-    dynamic error,
-    Widget Function(dynamic error)? errorWidget,
+    Object? error,
+    Widget Function(Object? error)? errorWidget,
     SortOrder groupSortOrder = SortOrder.descending,
     bool stickyGroups = true,
     Widget loadingWidget = const Center(
@@ -335,6 +342,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       groupCreator: groupCreator,
       sortGroupBy: sortGroupBy,
       separatorBuilder: separatorBuilder,
+      itemKeyBuilder: itemKeyBuilder,
       controller: controller ?? InfiniteGroupedListController(),
       onRefresh: onRefresh,
       noItemsFoundWidget: noItemsFoundWidget,
@@ -387,6 +395,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     this.onNoMoreItemsFound,
     this.sortGroupBy,
     this.separatorBuilder,
+    this.itemKeyBuilder,
     this.isPaged = true,
     this.onRefresh,
     this.noItemsFoundWidget,
@@ -472,6 +481,14 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// The separator builder is used to build the separator between items.
   final Widget Function(ItemType item)? separatorBuilder;
 
+  /// Optionally provides a stable [Key] for each item.
+  ///
+  /// When provided, children are matched by key across rebuilds via
+  /// `findChildIndexCallback`, so inserting or removing items preserves the
+  /// element and [State] of the remaining items instead of shifting it onto
+  /// their neighbours. Keys must be unique among the currently loaded items.
+  final Key Function(ItemType item)? itemKeyBuilder;
+
   /// Optionally if you want to do something when the user pulls to refresh.
   final InfiniteGroupedListRefreshCallback? onRefresh;
 
@@ -501,12 +518,12 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   final Widget? noItemsFoundWidget;
 
   /// The widget to show when the first load call fails
-  final Widget Function(dynamic error)? initialItemsErrorWidget;
+  final Widget Function(Object? error)? initialItemsErrorWidget;
 
   /// The widget to show when the load call fails.
   ///
   /// This will be shown at the bottom of the list.
-  final Widget Function(dynamic error)? loadMoreItemsErrorWidget;
+  final Widget Function(Object? error)? loadMoreItemsErrorWidget;
 
   /// Return the field of the item that you want to group by.
   ///
@@ -549,6 +566,11 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// Whether the [onLoadMore] uses paging. If it does not, this should be set as [false]
   ///
   /// otherwise it will keep on adding the same items to the list.
+  ///
+  /// While paging is enabled and the loaded content is shorter than the
+  /// viewport, every scroll position sits within the load-more threshold, so
+  /// additional pages are fetched automatically as the user scrolls until the
+  /// viewport fills.
   final bool isPaged;
 
   final bool showGroups;
@@ -557,6 +579,10 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   ///
   /// Off by default to avoid extra key bookkeeping when the feature
   /// is not needed.
+  ///
+  /// Anchoring identifies groups by their [GroupTitle] value, so [GroupTitle]
+  /// should implement `==` and `hashCode` consistently for `jumpToGroup` to
+  /// resolve groups reliably.
   final bool enableAnchoring;
 
   /// The controller of the list.
@@ -595,7 +621,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   final VoidCallback? onLoadMoreTriggered;
 
   /// External error state for reactive mode.
-  final dynamic reactiveError;
+  final Object? reactiveError;
 
   @override
   _InfiniteGroupState<ItemType, GroupBy, GroupTitle> createState() =>
@@ -611,7 +637,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   bool loading = true;
   bool hasError = false;
   bool noMoreItemsToLoad = false;
-  dynamic error;
+  Object? error;
 
   final _InfiniteGroupedListInternalController<ItemType, GroupBy, GroupTitle>
       _pageInformationController = _InfiniteGroupedListInternalController();
@@ -1171,7 +1197,12 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
           widget.reactiveError != oldWidget.reactiveError) {
         _handleReactiveDataUpdate();
       }
-    } else if (widget.groupBy != oldWidget.groupBy ||
+    }
+
+    // Grouping changes must re-group immediately in both modes. In reactive
+    // mode the external items are unchanged, but they were grouped with the
+    // previous callbacks, so a re-group is still required.
+    if (widget.groupBy != oldWidget.groupBy ||
         widget.groupCreator != oldWidget.groupCreator ||
         widget.sortGroupBy != oldWidget.sortGroupBy ||
         widget.groupSortOrder != oldWidget.groupSortOrder) {
@@ -1182,6 +1213,43 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
         !widget.enableAnchoring) {
       _groupHeaderContexts.clear();
     }
+  }
+
+  Widget _buildItemRow(GroupTitle title, int i) {
+    final item = groupedItems[title]![i];
+    final isLastInGroup = i == groupedItems[title]!.length - 1;
+    return Column(
+      key: widget.itemKeyBuilder?.call(item),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        widget.itemBuilder(item),
+        // Separator goes *between* items, so skip it after the
+        // last item of each group.
+        if (widget.separatorBuilder != null && !isLastInGroup)
+          widget.separatorBuilder!(item),
+      ],
+    );
+  }
+
+  SliverChildBuilderDelegate _buildChildrenDelegate(GroupTitle title) {
+    final items = groupedItems[title]!;
+    final itemKeyBuilder = widget.itemKeyBuilder;
+    if (itemKeyBuilder == null) {
+      return SliverChildBuilderDelegate(
+        (context, i) => _buildItemRow(title, i),
+        childCount: items.length,
+      );
+    }
+    final keyToIndex = <Key, int>{
+      for (var i = 0; i < items.length; i++) itemKeyBuilder(items[i]): i,
+    };
+    return SliverChildBuilderDelegate(
+      (context, i) => _buildItemRow(title, i),
+      childCount: items.length,
+      // Matching children by key keeps the element (and its State) of the
+      // remaining items alive when earlier items are inserted or removed.
+      findChildIndexCallback: (key) => keyToIndex[key],
+    );
   }
 
   CustomScrollView _buildList() {
@@ -1209,50 +1277,14 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
             return header;
           },
           sliver: widget.listStyle == ListStyle.listView
-              ? SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) {
-                      final item = groupedItems[title]![i];
-                      final isLastInGroup =
-                          i == groupedItems[title]!.length - 1;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          widget.itemBuilder(item),
-                          // Separator goes *between* items, so skip it after the
-                          // last item of each group.
-                          if (widget.separatorBuilder != null && !isLastInGroup)
-                            widget.separatorBuilder!(item),
-                        ],
-                      );
-                    },
-                    childCount: groupedItems[title]!.length,
-                  ),
-                )
+              ? SliverList(delegate: _buildChildrenDelegate(title))
               : SliverGrid(
                   gridDelegate: widget.gridDelegate ??
                       const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 3,
                         childAspectRatio: 2,
                       ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) {
-                      final item = groupedItems[title]![i];
-                      final isLastInGroup =
-                          i == groupedItems[title]!.length - 1;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          widget.itemBuilder(item),
-                          // Separator goes *between* items, so skip it after the
-                          // last item of each group.
-                          if (widget.separatorBuilder != null && !isLastInGroup)
-                            widget.separatorBuilder!(item),
-                        ],
-                      );
-                    },
-                    childCount: groupedItems[title]!.length,
-                  ),
+                  delegate: _buildChildrenDelegate(title),
                 ),
         );
       }).toList()
@@ -1293,28 +1325,28 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 
   @override
   Widget build(BuildContext context) {
-    return loading && _allItems.isEmpty
-        ? widget.loadingWidget
-        : widget.showRefreshIndicator
-            ? RefreshIndicator(
-                color: widget.refreshIndicatorColor,
-                backgroundColor: widget.refreshIndicatorBackgroundColor,
-                onRefresh: _refresh,
-                child: groupTitles.isEmpty
-                    ? EmptyList(
-                        widget: widget,
-                        hasError: hasError,
-                        error: error,
-                      )
-                    : _buildList(),
-              )
-            : groupTitles.isEmpty
-                ? EmptyList(
-                    widget: widget,
-                    hasError: hasError,
-                    error: error,
-                  )
-                : _buildList();
+    if (loading && _allItems.isEmpty) {
+      return widget.loadingWidget;
+    }
+
+    final content = groupTitles.isEmpty
+        ? EmptyList(
+            widget: widget,
+            hasError: hasError,
+            error: error,
+          )
+        : _buildList();
+
+    if (!widget.showRefreshIndicator) {
+      return content;
+    }
+
+    return RefreshIndicator(
+      color: widget.refreshIndicatorColor,
+      backgroundColor: widget.refreshIndicatorBackgroundColor,
+      onRefresh: _refresh,
+      child: content,
+    );
   }
 
   Map<GroupTitle, List<ItemType>> _groupItems(List<ItemType> items) {

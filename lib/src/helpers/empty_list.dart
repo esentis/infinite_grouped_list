@@ -11,7 +11,7 @@ class EmptyList extends StatelessWidget {
 
   final InfiniteGroupedList widget;
   final bool hasError;
-  final dynamic error;
+  final Object? error;
 
   @override
   Widget build(BuildContext context) {
