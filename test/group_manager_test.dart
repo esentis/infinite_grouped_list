@@ -103,6 +103,41 @@ void main() {
         groups['GAMMA'], orderedEquals(const <_Item>[_Item('d', 'gamma', 4)]));
   });
 
+  test('sorting is stable for items with equal keys merged across pages', () {
+    final manager = buildManager(sortFn: (item) => item.sortValue);
+    final groups = <String, List<_Item>>{};
+
+    // Two pages whose items all share the same sort key, like paginated loads.
+    manager.merge(groups, [
+      for (var i = 0; i < 20; i++) _Item('i$i', 'alpha', 7),
+    ]);
+    manager.merge(groups, [
+      for (var i = 20; i < 60; i++) _Item('i$i', 'alpha', 7),
+    ]);
+
+    // Dart's List.sort is unstable for >= 40 equal elements, so without an
+    // insertion-order tie-break this exact expectation fails.
+    expect(
+      groups['ALPHA']!.map((item) => item.id),
+      orderedEquals([for (var i = 0; i < 60; i++) 'i$i']),
+    );
+  });
+
+  test('initialize keeps arrival order for items with equal sort keys', () {
+    final manager = buildManager(sortFn: (item) => item.sortValue);
+
+    final groups = manager.initialize([
+      for (var i = 0; i < 60; i++) _Item('i$i', 'alpha', 7),
+    ]);
+
+    // Dart's List.sort is unstable for >= 40 equal elements, so without an
+    // insertion-order tie-break this exact expectation fails.
+    expect(
+      groups['ALPHA']!.map((item) => item.id),
+      orderedEquals([for (var i = 0; i < 60; i++) 'i$i']),
+    );
+  });
+
   test('removeWhere removes matching items and drops empty groups', () {
     final manager = buildManager();
     final allItems = <_Item>[

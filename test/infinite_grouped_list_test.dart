@@ -1005,6 +1005,195 @@ void main() {
   });
 
   testWidgets(
+      'items with equal sort keys keep their arrival order across pages',
+      (WidgetTester tester) async {
+    final controller = InfiniteGroupedListController<String, String, String>();
+    var calls = 0;
+
+    Future<List<String>> onLoadMore(PaginationInfo paginationInfo) async {
+      return List<String>.generate(
+        20,
+        (index) => 'SameKey ${calls++}',
+      );
+    }
+
+    await tester.binding.setSurfaceSize(const Size(600, 4000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: InfiniteGroupedList<String, String, String>(
+          controller: controller,
+          showRefreshIndicator: false,
+          onLoadMore: onLoadMore,
+          groupBy: (_) => 'group',
+          groupCreator: (groupBy) => groupBy,
+          sortGroupBy: (_) => 1,
+          groupTitleBuilder: (_, __, ___, ____) => const SizedBox(height: 32),
+          itemBuilder: (item) => SizedBox(height: 48, child: Text(item)),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await controller.loadItems();
+    await tester.pumpAndSettle();
+
+    expect(controller.getItems(), hasLength(40));
+
+    final renderedTexts = tester
+        .widgetList<Text>(
+          find.byWidgetPredicate(
+            (widget) => widget is Text && widget.data!.startsWith('SameKey '),
+          ),
+        )
+        .map((text) => text.data!)
+        .toList();
+
+    // Dart's List.sort is unstable for >= 40 equal elements, so without an
+    // insertion-order tie-break the rendered order can deviate from the
+    // order in which the pages arrived.
+    expect(
+      renderedTexts,
+      List<String>.generate(40, (index) => 'SameKey $index'),
+    );
+  });
+
+  testWidgets('default empty text follows the theme in dark mode',
+      (WidgetTester tester) async {
+    final controller = InfiniteGroupedListController<String, String, String>();
+    final theme = ThemeData.dark();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: theme,
+        home: SizedBox(
+          height: 320,
+          child: InfiniteGroupedList<String, String, String>(
+            controller: controller,
+            onLoadMore: (_) async => <String>[],
+            groupBy: (_) => 'group',
+            groupCreator: (groupBy) => groupBy,
+            groupTitleBuilder: (_, __, ___, ____) => const SizedBox.shrink(),
+            itemBuilder: (item) => Text(item),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final emptyText = tester.widget<Text>(find.text('No items found'));
+    expect(emptyText.style?.color, theme.colorScheme.onSurface);
+  });
+
+  testWidgets('default initial error text follows the theme in dark mode',
+      (WidgetTester tester) async {
+    final controller = InfiniteGroupedListController<String, String, String>();
+    final theme = ThemeData.dark();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: theme,
+        home: SizedBox(
+          height: 320,
+          child: InfiniteGroupedList<String, String, String>(
+            controller: controller,
+            onLoadMore: (_) async => throw Exception('boom'),
+            groupBy: (_) => 'group',
+            groupCreator: (groupBy) => groupBy,
+            groupTitleBuilder: (_, __, ___, ____) => const SizedBox.shrink(),
+            itemBuilder: (item) => Text(item),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final errorText = tester.widget<Text>(
+      find.text('Something went wrong while fetching items'),
+    );
+    expect(errorText.style?.color, theme.colorScheme.error);
+  });
+
+  testWidgets('default load more error text follows the theme in dark mode',
+      (WidgetTester tester) async {
+    final controller =
+        InfiniteGroupedListController<String, String, String>(limit: 1);
+    final theme = ThemeData.dark();
+    var calls = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: theme,
+        home: SizedBox(
+          height: 320,
+          child: InfiniteGroupedList<String, String, String>(
+            controller: controller,
+            onLoadMore: (_) async {
+              calls++;
+              if (calls == 1) {
+                return <String>['Only item'];
+              }
+              throw Exception('load more failed');
+            },
+            groupBy: (_) => 'group',
+            groupCreator: (groupBy) => groupBy,
+            groupTitleBuilder: (_, __, ___, ____) => const SizedBox.shrink(),
+            itemBuilder: (item) => Text(item),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await controller.loadItems();
+    await tester.pumpAndSettle();
+
+    final errorText = tester.widget<Text>(
+      find.text('Oops something went wrong !'),
+    );
+    expect(errorText.style?.color, theme.colorScheme.error);
+  });
+
+  testWidgets(
+      'swapping from an internal to an external scroll controller stays consistent',
+      (WidgetTester tester) async {
+    final controller = InfiniteGroupedListController<String, String, String>();
+    final externalScrollController = ScrollController();
+
+    // First build without an external controller: the widget owns one
+    // internally and is responsible for disposing it.
+    await tester.pumpWidget(
+      _buildImperativeList(
+        controller: controller,
+        onLoadMore: (_) async => <String>['A'],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Swap in an external controller. The internally owned controller is
+    // detached here; disposal must be deferred until the child Scrollable has
+    // released its position.
+    await tester.pumpWidget(
+      _buildImperativeList(
+        controller: controller,
+        scrollController: externalScrollController,
+        onLoadMore: (_) async => <String>['A'],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -200));
+    await tester.pumpAndSettle();
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(externalScrollController.hasClients, isFalse);
+  });
+
+  testWidgets(
       'reactive mode controller throws errors for unsupported operations',
       (WidgetTester tester) async {
     final controller = InfiniteGroupedListController<String, String, String>();
