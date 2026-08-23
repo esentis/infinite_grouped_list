@@ -370,7 +370,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// * [sortGroupBy]: Determines the sorting of items within each group.
   ///
   /// The list behavior can be further customized with optional parameters like
-  /// [controller], [onRefresh], [padding], [noItemsFoundWidget],
+  /// [controller], [onRefresh], [noItemsFoundWidget],
   /// [initialItemsErrorWidget], [loadMoreItemsErrorWidget], [groupSortOrder],
   /// [loadingWidget], [refreshIndicatorColor], and
   /// [refreshIndicatorBackgroundColor].
@@ -469,7 +469,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// The item builder is used to build the item.
   final Widget Function(ItemType item) itemBuilder;
 
-  /// The seperator builder is used to build the seperator between items.
+  /// The separator builder is used to build the separator between items.
   final Widget Function(ItemType item)? separatorBuilder;
 
   /// Optionally if you want to do something when the user pulls to refresh.
@@ -543,7 +543,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// The background color of the refresh indicator
   final Color? refreshIndicatorBackgroundColor;
 
-  /// Whether the grpup should stick to the top of the screen when scrolling up.
+  /// Whether the group should stick to the top of the screen when scrolling up.
   final bool stickyGroups;
 
   /// Whether the [onLoadMore] uses paging. If it does not, this should be set as [false]
@@ -630,13 +630,27 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   final Map<GroupTitle, BuildContext> _groupHeaderContexts = {};
   bool _isJumpingToGroup = false;
 
+  GroupManager<ItemType, GroupBy, GroupTitle>? _groupManagerInstance;
+
+  /// A single persistent manager instance keeps the insertion-sequence
+  /// bookkeeping used for stable sorting monotonic across page loads and
+  /// re-groups. A new instance is created lazily from the current widget
+  /// callbacks; [didUpdateWidget] keeps it in sync with the latest ones.
   GroupManager<ItemType, GroupBy, GroupTitle> get _groupManager =>
-      GroupManager<ItemType, GroupBy, GroupTitle>(
+      _groupManagerInstance ??= GroupManager<ItemType, GroupBy, GroupTitle>(
         groupBy: widget.groupBy,
         groupCreator: widget.groupCreator,
         sortFn: widget.sortGroupBy,
         sortOrder: widget.groupSortOrder,
       );
+
+  void _syncGroupManager() {
+    _groupManagerInstance
+      ?..groupBy = widget.groupBy
+      ..groupCreator = widget.groupCreator
+      ..sortFn = widget.sortGroupBy
+      ..sortOrder = widget.groupSortOrder;
+  }
 
   void _updateState(VoidCallback updater) {
     if (!mounted) {
@@ -681,7 +695,14 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   void _detachScrollController() {
     _scrollController.removeListener(_handleScrollListener);
     if (_ownsScrollController) {
-      _scrollController.dispose();
+      final controller = _scrollController;
+      // A child Scrollable can still hold positions attached to this
+      // controller until it rebuilds or unmounts later in the frame, so
+      // disposal is deferred to the end of the frame to guarantee the
+      // controller is never used after being disposed.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller.dispose();
+      });
     }
     _ownsScrollController = false;
   }
@@ -1129,6 +1150,8 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
       InfiniteGroupedList<ItemType, GroupBy, GroupTitle> oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    _syncGroupManager();
+
     if (widget.controller != oldWidget.controller) {
       _detachController(oldWidget.controller);
       _attachController(widget.controller);
@@ -1247,10 +1270,10 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
           if (hasError)
             SliverToBoxAdapter(
               child: widget.loadMoreItemsErrorWidget?.call(error) ??
-                  const Text(
+                  Text(
                     'Oops something went wrong !',
                     style: TextStyle(
-                      color: Colors.black,
+                      color: Theme.of(context).colorScheme.error,
                       fontSize: 20,
                     ),
                   ),
@@ -1304,8 +1327,10 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 /// Use this controller to :
 ///
 /// 1. Get the items in the list.
-/// 2. Retry the last failed load more call.
+/// 2. Programmatically fetch (or retry) the next page.
 /// 3. Refresh the list.
+/// 4. Add or remove items.
+/// 5. Jump to a specific group when anchoring is enabled.
 class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
   /// The constructor for the controller.
   InfiniteGroupedListController({
@@ -1452,14 +1477,8 @@ class _InfiniteGroupedListInternalController<ItemType, GroupBy, GroupTitle> {
   // This is the current offset of the list.
   int currentOffset = 0;
 
-  // Function to increment the offset
-  void incrementOffset(int offset) => currentOffset += offset;
-
   /// This is the current page of the list.
   int currentPage = 1;
-
-  /// Function to increment the page
-  void incrementPage() => currentPage++;
 
   _InfiniteGroupedListInternalController();
 }

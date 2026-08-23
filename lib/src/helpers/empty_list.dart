@@ -22,22 +22,22 @@ class EmptyList extends StatelessWidget {
           child: Center(
             child: hasError
                 ? widget.initialItemsErrorWidget?.call(error) ??
-                    const Center(
+                    Center(
                       child: Text(
                         'Something went wrong while fetching items',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.black,
+                          color: Theme.of(context).colorScheme.error,
                           fontSize: 20,
                         ),
                       ),
                     )
                 : widget.noItemsFoundWidget ??
-                    const Text(
+                    Text(
                       'No items found',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.black,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 20,
                       ),
                     ),
