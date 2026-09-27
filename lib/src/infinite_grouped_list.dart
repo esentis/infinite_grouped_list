@@ -46,6 +46,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     InfiniteGroupedListSort<ItemType>? sortGroupBy,
     Widget Function(ItemType)? separatorBuilder,
     Key Function(ItemType item)? itemKeyBuilder,
+    Object? groupingKey,
     bool isPaged = true,
     InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
     InfiniteGroupedListRefreshCallback? onRefresh,
@@ -75,6 +76,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       sortGroupBy: sortGroupBy,
       separatorBuilder: separatorBuilder,
       itemKeyBuilder: itemKeyBuilder,
+      groupingKey: groupingKey,
       isPaged: isPaged,
       controller: controller ?? InfiniteGroupedListController(),
       onRefresh: onRefresh,
@@ -114,6 +116,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     SliverGridDelegate? gridDelegate,
     Widget Function(ItemType)? separatorBuilder,
     Key Function(ItemType item)? itemKeyBuilder,
+    Object? groupingKey,
     bool isPaged = true,
     InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
     InfiniteGroupedListRefreshCallback? onRefresh,
@@ -144,6 +147,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       sortGroupBy: sortGroupBy,
       separatorBuilder: separatorBuilder,
       itemKeyBuilder: itemKeyBuilder,
+      groupingKey: groupingKey,
       isPaged: isPaged,
       controller: controller ?? InfiniteGroupedListController(),
       onRefresh: onRefresh,
@@ -210,6 +214,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     InfiniteGroupedListSort<ItemType>? sortGroupBy,
     Widget Function(ItemType)? separatorBuilder,
     Key Function(ItemType item)? itemKeyBuilder,
+    Object? groupingKey,
     InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
     InfiniteGroupedListRefreshCallback? onRefresh,
     Widget? noItemsFoundWidget,
@@ -243,6 +248,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       sortGroupBy: sortGroupBy,
       separatorBuilder: separatorBuilder,
       itemKeyBuilder: itemKeyBuilder,
+      groupingKey: groupingKey,
       controller: controller ?? InfiniteGroupedListController(),
       onRefresh: onRefresh,
       noItemsFoundWidget: noItemsFoundWidget,
@@ -310,6 +316,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     InfiniteGroupedListSort<ItemType>? sortGroupBy,
     Widget Function(ItemType)? separatorBuilder,
     Key Function(ItemType item)? itemKeyBuilder,
+    Object? groupingKey,
     InfiniteGroupedListController<ItemType, GroupBy, GroupTitle>? controller,
     InfiniteGroupedListRefreshCallback? onRefresh,
     Widget? noItemsFoundWidget,
@@ -343,6 +350,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       sortGroupBy: sortGroupBy,
       separatorBuilder: separatorBuilder,
       itemKeyBuilder: itemKeyBuilder,
+      groupingKey: groupingKey,
       controller: controller ?? InfiniteGroupedListController(),
       onRefresh: onRefresh,
       noItemsFoundWidget: noItemsFoundWidget,
@@ -396,6 +404,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     this.sortGroupBy,
     this.separatorBuilder,
     this.itemKeyBuilder,
+    this.groupingKey,
     this.isPaged = true,
     this.onRefresh,
     this.noItemsFoundWidget,
@@ -446,15 +455,20 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// the appropriate items.
   ///
   /// The function should return a Future that completes with a list of new items
-  /// to be added to the list. The function is expected to return an empty list
-  /// when there are no more items to load, signaling the end of the available data.
+  /// to be added to the list. A page with fewer than [PaginationInfo.limit]
+  /// items (taken from [InfiniteGroupedListController.limit], default 20)
+  /// signals the end of the available data, so always request
+  /// `paginationInfo.limit` items rather than a hardcoded page size.
   ///
   /// #### Example usage (with an API that uses offset-based pagination):
   ///
   /// ```dart
   /// onLoadMore: (paginationInfo) {
-  ///   // fetch 10 items starting from 'paginationInfo.offset'
-  ///   return myApi.getItems(offset: paginationInfo.offset, limit: 10);
+  ///   // fetch a page starting from 'paginationInfo.offset'
+  ///   return myApi.getItems(
+  ///     offset: paginationInfo.offset,
+  ///     limit: paginationInfo.limit,
+  ///   );
   /// }
   /// ```
   ///
@@ -462,8 +476,11 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   ///
   /// ```dart
   /// onLoadMore: (paginationInfo) {
-  ///   // fetch 10 items starting from 'paginationInfo.page'
-  ///   return myApi.getItems(page: paginationInfo.page, limit: 10);
+  ///   // fetch the page at 'paginationInfo.page'
+  ///   return myApi.getItems(
+  ///     page: paginationInfo.page,
+  ///     limit: paginationInfo.limit,
+  ///   );
   /// }
   /// ```
   ///
@@ -488,6 +505,21 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// element and [State] of the remaining items instead of shifting it onto
   /// their neighbours. Keys must be unique among the currently loaded items.
   final Key Function(ItemType item)? itemKeyBuilder;
+
+  /// Identifies the current grouping configuration.
+  ///
+  /// When non-null, the loaded items are re-grouped only when this value
+  /// changes (compared with `==`), when [groupSortOrder] changes, or when
+  /// [sortGroupBy] is added or removed. New [groupBy], [groupCreator], and
+  /// [sortGroupBy] references are then ignored for change detection (they
+  /// are still used for subsequent grouping), so inline closures no longer
+  /// cause a full re-group on every parent rebuild.
+  ///
+  /// Change the key whenever the grouping logic itself changes, e.g.
+  /// `groupingKey: groupMode` for a "group by date / by type" toggle.
+  ///
+  /// When null, grouping changes are detected by callback identity.
+  final Object? groupingKey;
 
   /// Optionally if you want to do something when the user pulls to refresh.
   final InfiniteGroupedListRefreshCallback? onRefresh;
@@ -529,10 +561,12 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   ///
   /// Will be used by the [groupCreator] to create the title of the group.
   ///
-  /// Prefer a stable reference (e.g. a top-level function or a method), not a
-  /// closure created inline in `build`. In imperative mode a new [groupBy],
-  /// [groupCreator], or [sortGroupBy] reference is treated as a grouping change
-  /// and triggers a full re-group of the currently loaded items.
+  /// Unless [groupingKey] is set, a new [groupBy], [groupCreator], or
+  /// [sortGroupBy] reference is treated as a grouping change and triggers a
+  /// full re-group of the currently loaded items. Closures written inline in
+  /// `build` are a new reference on every rebuild, so either pass a stable
+  /// reference (a top-level function or a method tear-off) or set
+  /// [groupingKey].
   final GroupBy Function(ItemType item) groupBy;
 
   /// Using the [groupBy] value, you can define how the group title should be created.
@@ -567,10 +601,9 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   ///
   /// otherwise it will keep on adding the same items to the list.
   ///
-  /// While paging is enabled and the loaded content is shorter than the
-  /// viewport, every scroll position sits within the load-more threshold, so
-  /// additional pages are fetched automatically as the user scrolls until the
-  /// viewport fills.
+  /// While paging is enabled and the loaded content does not fill the
+  /// viewport, additional pages are fetched automatically, without requiring
+  /// a scroll, until the viewport fills or the data is exhausted.
   final bool isPaged;
 
   final bool showGroups;
@@ -645,6 +678,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   late ScrollController _scrollController;
   bool _ownsScrollController = false;
   bool _reactiveLoadPending = false;
+  bool _viewportFillCheckScheduled = false;
   Future<_PageLoadOutcome>? _activePageLoad;
 
   final List<ItemType> _allItems = [];
@@ -737,6 +771,25 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     unawaited(_handleScroll());
   }
 
+  /// Re-evaluates the load-more condition once the next frame is laid out.
+  ///
+  /// Content shorter than the viewport cannot be scrolled with clamping
+  /// physics (Android, desktop, web), so no scroll event would ever request
+  /// the next page. Checking after every data change keeps paging until the
+  /// viewport is filled or the data is exhausted.
+  void _scheduleViewportFillCheck() {
+    if (!widget.isPaged || _viewportFillCheckScheduled) {
+      return;
+    }
+    _viewportFillCheckScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _viewportFillCheckScheduled = false;
+      if (mounted) {
+        _handleScrollListener();
+      }
+    });
+  }
+
   void _scheduleHeaderContextUpdate(
     GroupTitle title,
     BuildContext context,
@@ -807,7 +860,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     widget.onNoMoreItemsFound?.call();
   }
 
-  void _applyReactiveData() {
+  void _applyReactiveData({bool forceRegroup = false}) {
     final externalLoading = widget.reactiveIsLoading ?? false;
     final externalHasReachedMax = widget.reactiveHasReachedMax ?? false;
     final externalItems = widget.reactiveItems ?? <ItemType>[];
@@ -818,7 +871,37 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     noMoreItemsToLoad = externalHasReachedMax;
     hasError = externalError != null;
     error = externalError;
-    _setAllItems(externalItems);
+    if (forceRegroup) {
+      _setAllItems(externalItems);
+    } else {
+      _syncReactiveItems(externalItems);
+    }
+    _scheduleViewportFillCheck();
+  }
+
+  /// Brings the grouped state in line with [items] doing as little work as
+  /// possible.
+  ///
+  /// Items are compared by identity against the currently grouped ones, so
+  /// in-place mutation of the external list is still detected:
+  /// * unchanged items (e.g. only `isLoading` flipped) are not re-grouped;
+  /// * an appended page is merged, re-sorting only the groups it touches;
+  /// * anything else falls back to a full re-group.
+  void _syncReactiveItems(List<ItemType> items) {
+    final previousLength = _allItems.length;
+    if (items.length < previousLength) {
+      _setAllItems(items);
+      return;
+    }
+    for (var i = 0; i < previousLength; i++) {
+      if (!identical(items[i], _allItems[i])) {
+        _setAllItems(items);
+        return;
+      }
+    }
+    if (items.length > previousLength) {
+      _mergeItemsIntoGroups(items.sublist(previousLength));
+    }
   }
 
   Future<_PageLoadOutcome> _performImperativeLoad({
@@ -850,6 +933,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
         hasError = false;
         error = null;
       });
+      _scheduleViewportFillCheck();
       return _PageLoadOutcome.loaded;
     } catch (e) {
       _updateState(() {
@@ -936,11 +1020,16 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     });
   }
 
-  bool _requestReactiveLoadMore() {
+  /// Asks the external state to load the next page.
+  ///
+  /// Automatic (scroll-driven) requests are suppressed while an error is
+  /// shown to avoid retry loops; an explicit [retry] from the controller is
+  /// allowed through.
+  bool _requestReactiveLoadMore({bool retry = false}) {
     if (!widget.isReactiveMode ||
         loading ||
         noMoreItemsToLoad ||
-        hasError ||
+        (hasError && !retry) ||
         _reactiveLoadPending) {
       return false;
     }
@@ -1049,14 +1138,6 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     }
   }
 
-  void _handleReactiveDataUpdate() {
-    if (!widget.isReactiveMode) {
-      return;
-    }
-
-    _updateState(_applyReactiveData);
-  }
-
   Future<void> _initList() async {
     if (widget.isReactiveMode) {
       _applyReactiveData();
@@ -1094,7 +1175,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 
   Future<void> _loadItems() async {
     if (widget.isReactiveMode) {
-      _requestReactiveLoadMore();
+      _requestReactiveLoadMore(retry: true);
       return;
     }
 
@@ -1129,6 +1210,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     _pruneHeaderContexts();
 
     _updateState(() {});
+    _scheduleViewportFillCheck();
   }
 
   void _removeItem(ItemType item) {
@@ -1141,6 +1223,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     _pruneHeaderContexts();
 
     _updateState(() {});
+    _scheduleViewportFillCheck();
   }
 
   /// Function to add items to the list.
@@ -1190,22 +1273,22 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
       _attachScrollController(widget.scrollController);
     }
 
+    // Grouping changes must re-group immediately in both modes. In reactive
+    // mode the external items may be unchanged, but they were grouped with the
+    // previous callbacks, so a re-group is still required.
+    final groupingChanged = _didGroupingChange(oldWidget);
+
     if (widget.isReactiveMode) {
-      if (widget.reactiveItems != oldWidget.reactiveItems ||
+      if (groupingChanged ||
+          widget.reactiveItems != oldWidget.reactiveItems ||
           widget.reactiveIsLoading != oldWidget.reactiveIsLoading ||
           widget.reactiveHasReachedMax != oldWidget.reactiveHasReachedMax ||
           widget.reactiveError != oldWidget.reactiveError) {
-        _handleReactiveDataUpdate();
+        _updateState(
+          () => _applyReactiveData(forceRegroup: groupingChanged),
+        );
       }
-    }
-
-    // Grouping changes must re-group immediately in both modes. In reactive
-    // mode the external items are unchanged, but they were grouped with the
-    // previous callbacks, so a re-group is still required.
-    if (widget.groupBy != oldWidget.groupBy ||
-        widget.groupCreator != oldWidget.groupCreator ||
-        widget.sortGroupBy != oldWidget.sortGroupBy ||
-        widget.groupSortOrder != oldWidget.groupSortOrder) {
+    } else if (groupingChanged) {
       _updateState(_rebuildGroupsFromAllItems);
     }
 
@@ -1215,18 +1298,49 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     }
   }
 
+  bool _didGroupingChange(
+    InfiniteGroupedList<ItemType, GroupBy, GroupTitle> oldWidget,
+  ) {
+    if (widget.groupSortOrder != oldWidget.groupSortOrder ||
+        (widget.sortGroupBy == null) != (oldWidget.sortGroupBy == null)) {
+      return true;
+    }
+    // With a grouping key the callbacks are trusted to be equivalent until
+    // the key changes, so inline closures (a new instance on every build) do
+    // not force a full re-group on every parent rebuild.
+    if (widget.groupingKey != null || oldWidget.groupingKey != null) {
+      return widget.groupingKey != oldWidget.groupingKey;
+    }
+    return widget.groupBy != oldWidget.groupBy ||
+        widget.groupCreator != oldWidget.groupCreator ||
+        widget.sortGroupBy != oldWidget.sortGroupBy;
+  }
+
   Widget _buildItemRow(GroupTitle title, int i) {
     final item = groupedItems[title]![i];
+    final key = widget.itemKeyBuilder?.call(item);
+    final child = widget.itemBuilder(item);
+    final separatorBuilder = widget.separatorBuilder;
+    // Without a separator the item is returned as-is so it receives the
+    // sliver's constraints directly; a Column would hand it an unbounded
+    // height and keep grid items from filling their cells.
+    if (separatorBuilder == null) {
+      return KeyedSubtree(key: key, child: child);
+    }
     final isLastInGroup = i == groupedItems[title]!.length - 1;
     return Column(
-      key: widget.itemKeyBuilder?.call(item),
+      key: key,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        widget.itemBuilder(item),
+        // Grid cells have a fixed size, so the item takes whatever the
+        // separator leaves over.
+        if (widget.listStyle == ListStyle.grid)
+          Expanded(child: child)
+        else
+          child,
         // Separator goes *between* items, so skip it after the
         // last item of each group.
-        if (widget.separatorBuilder != null && !isLastInGroup)
-          widget.separatorBuilder!(item),
+        if (!isLastInGroup) separatorBuilder(item),
       ],
     );
   }
@@ -1260,10 +1374,15 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
         return SliverStickyHeader.builder(
           sticky: widget.stickyGroups,
           builder: (context, state) {
+            // Registered even for hidden headers: the zero-size header still
+            // marks the start of its group, which is what jumpToGroup needs.
+            if (widget.enableAnchoring) {
+              _scheduleHeaderContextUpdate(title, context);
+            }
             if (!widget.showGroups) {
               return const SizedBox.shrink();
             }
-            final header = widget.groupTitleBuilder(
+            return widget.groupTitleBuilder(
               title,
               widget.groupBy(
                 groupedItems[title]!.first,
@@ -1271,10 +1390,6 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
               state.isPinned,
               state.scrollPercentage,
             );
-            if (widget.enableAnchoring) {
-              _scheduleHeaderContextUpdate(title, context);
-            }
-            return header;
           },
           sliver: widget.listStyle == ListStyle.listView
               ? SliverList(delegate: _buildChildrenDelegate(title))
@@ -1400,7 +1515,9 @@ class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
   /// If the last call failed then it retries the same page.
   ///
   /// In reactive mode, this triggers the configured external load callback
-  /// using the same in-flight guard as scroll-based pagination.
+  /// using the same in-flight guard as scroll-based pagination. Unlike
+  /// scrolling, it also fires while an `error` is set, so it can back a
+  /// "retry" button.
   Future<void> loadItems() {
     return _loadItemsCallback?.call() ?? Future<void>.value();
   }

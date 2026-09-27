@@ -762,6 +762,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    // Pages loaded to fill the viewport are not jump retries.
+    final callsBeforeJump = calls;
 
     final found = await controller.jumpToGroup(
       predicate: (title, groupBy) => title == 'Missing Group',
@@ -770,7 +772,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(found, isFalse);
-    expect(calls, 4);
+    expect(calls - callsBeforeJump, 3);
   });
 
   testWidgets('jumpToGroup respects a custom maxRetries value',
@@ -797,6 +799,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    // Pages loaded to fill the viewport are not jump retries.
+    final callsBeforeJump = calls;
 
     final found = await controller.jumpToGroup(
       predicate: (title, groupBy) => title == 'Missing Group',
@@ -806,7 +810,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(found, isFalse);
-    expect(calls, 2);
+    expect(calls - callsBeforeJump, 1);
   });
 
   testWidgets('jumpToGroup succeeds by title when anchoring is enabled',
@@ -1037,7 +1041,12 @@ void main() {
     final controller = InfiniteGroupedListController<String, String, String>();
     var calls = 0;
 
+    // Two full pages, then the source is exhausted. The tall surface is
+    // never filled, so the second page is fetched automatically.
     Future<List<String>> onLoadMore(PaginationInfo paginationInfo) async {
+      if (paginationInfo.page > 2) {
+        return <String>[];
+      }
       return List<String>.generate(
         20,
         (index) => 'SameKey ${calls++}',
