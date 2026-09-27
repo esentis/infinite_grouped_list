@@ -1,3 +1,22 @@
+## 1.6.0
+
+### Added
+
+- Added an optional `groupingKey` to all four constructors. When set, loaded items are re-grouped only when the key changes (or when `groupSortOrder` changes, or `sortGroupBy` is added or removed). New `groupBy`, `groupCreator`, and `sortGroupBy` instances no longer count as grouping changes. Closures written inline in `build` are a new instance on every rebuild, so without a key every parent rebuild (a `setState`, theme change, keyboard opening, or BLoC emission) re-grouped and re-sorted every loaded item. When `groupingKey` is null, the existing identity-based detection is unchanged.
+
+### Fixed
+
+- Pagination no longer stalls when the loaded content does not fill the viewport. Previously the next page was only requested from a scroll event, but content shorter than the viewport cannot scroll with clamping physics (Android, desktop, web), so large screens, grids, compact rows, or small page sizes got stuck after the first page. The widget now checks after every load, reactive update, and removal, and keeps requesting pages until the viewport is filled or the data is exhausted. This applies to both imperative and reactive modes.
+- Grid items now fill their cells. Every item used to be wrapped in a `Column`, which gave it an unbounded height, so a `Card`, image, or `Expanded`-based item inside a grid cell collapsed to its intrinsic height. Items without a `separatorBuilder` now get the cell's constraints directly. With a separator, a grid item takes the space that remains in the cell.
+- Reactive mode no longer re-groups all items when only `isLoading`, `hasReachedMax`, or `error` change. When the new `items` extend the previous ones (a newly loaded page), only the new items are grouped, and only the groups they touch are re-sorted. Any other change still re-groups fully. Items are compared by identity, so lists mutated in place are still picked up. A grouping change together with a data change now re-groups once instead of twice.
+- In reactive mode, `controller.loadItems()` now calls `onLoadMoreTriggered` even while an `error` is set, so it can back a "retry" button as documented. Scroll-triggered requests are still suppressed while an error is shown.
+- `jumpToGroup` now works with `showGroups: false`. Hidden headers were never registered, so the jump always returned `false`.
+
+### Docs
+
+- The `onLoadMore` examples now request `paginationInfo.limit` items. They used to hardcode `limit: 10`, which is below the default controller limit of 20, so any code copied from them marked the list exhausted after the first page.
+- Updated the `isPaged` and `groupBy` docs to match the new behaviour.
+
 ## 1.5.0
 
 ### Added

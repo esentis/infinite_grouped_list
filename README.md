@@ -62,6 +62,10 @@ BlocBuilder<ItemsBloc, ItemsState>(
       groupBy: (item) => item.category,
       groupCreator: (category) => category,
       groupTitleBuilder: (title, _, __, ___) => Text(title),
+
+      // Inline closures are new on every rebuild; the key tells the list the
+      // grouping is unchanged so it does not re-group on each emission.
+      groupingKey: 'category',
     );
   },
 )
@@ -77,7 +81,7 @@ InfiniteGroupedList(
     // Fetch data directly and return it
     return await apiService.fetchItems(
       page: paginationInfo.page,
-      limit: 20,
+      limit: paginationInfo.limit,
     );
   },
   itemBuilder: (item) => ListTile(title: Text(item.name)),
@@ -98,7 +102,23 @@ When using the imperative pattern, `PaginationInfo` provides pagination context:
 
 - `offset`: Current item offset for offset-based pagination
 - `page`: Current page number for page-based pagination
-- `limit`: Items per page (configurable via controller)
+- `limit`: Items per page (configurable via controller, default 20). Always request `paginationInfo.limit` items: a page shorter than the limit marks the list as exhausted.
+
+If the loaded items do not fill the viewport, further pages are requested automatically until it is filled or the data runs out, so pagination also works on large screens and dense grids.
+
+### Grouping Changes and `groupingKey`
+
+`groupBy`, `groupCreator`, and `sortGroupBy` are usually written as inline closures, which are a new instance on every rebuild. By default a new instance counts as a grouping change and re-groups all loaded items, so a large list re-groups on every parent rebuild.
+
+Set `groupingKey` to opt out: the list then re-groups only when the key changes (or when `groupSortOrder` changes or `sortGroupBy` is added or removed).
+
+```dart
+InfiniteGroupedList(
+  groupingKey: groupMode, // e.g. an enum: byDate / byType
+  groupBy: (item) => groupMode == GroupMode.byDate ? item.date : item.type,
+  // ...
+)
+```
 
 The InfiniteGroupedList widget is a comprehensive solution for any use case that involves displaying large amounts of data in an organized, easy-to-navigate manner.
 
