@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:infinite_grouped_list/src/helpers/empty_list.dart';
 import 'package:infinite_grouped_list/src/infinite_grouped_list.dart';
+import 'package:material_ui/material_ui.dart';
 
 InfiniteGroupedList<String, String, String> _baseWidget({
   Widget? noItemsFoundWidget,
@@ -13,7 +13,7 @@ InfiniteGroupedList<String, String, String> _baseWidget({
     initialItemsErrorWidget: initialItemsErrorWidget,
     groupBy: (item) => item,
     groupCreator: (groupBy) => groupBy,
-    groupTitleBuilder: (title, _, __, ___) => Text(title),
+    groupTitleBuilder: (title, _, _, _) => Text(title),
     itemBuilder: (item) => Text(item),
   );
 }
@@ -22,19 +22,16 @@ void main() {
   testWidgets('shows the default empty state message', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: EmptyList(
-          widget: _baseWidget(),
-          hasError: false,
-          error: null,
-        ),
+        home: EmptyList(widget: _baseWidget(), hasError: false, error: null),
       ),
     );
 
     expect(find.text('No items found'), findsOneWidget);
   });
 
-  testWidgets('shows a custom empty state widget when provided',
-      (tester) async {
+  testWidgets('shows a custom empty state widget when provided', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: EmptyList(
@@ -62,11 +59,14 @@ void main() {
     );
 
     expect(
-        find.text('Something went wrong while fetching items'), findsOneWidget);
+      find.text('Something went wrong while fetching items'),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('shows a custom initial error widget when provided',
-      (tester) async {
+  testWidgets('shows a custom initial error widget when provided', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: EmptyList(

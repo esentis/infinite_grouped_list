@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:infinite_grouped_list/src/helpers/empty_list.dart';
 import 'package:infinite_grouped_list/src/helpers/enums.dart';
 import 'package:infinite_grouped_list/src/helpers/group_manager.dart';
 import 'package:infinite_grouped_list/src/helpers/pagination_info.dart';
+import 'package:material_ui/material_ui.dart';
 
 typedef InfiniteGroupedListSort<ItemType> = Comparable Function(ItemType item);
 typedef InfiniteGroupedListRefreshCallback = FutureOr<void> Function();
@@ -38,11 +38,12 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       GroupBy groupBy,
       bool isPinned,
       double scrollPercentage,
-    ) groupTitleBuilder,
+    )
+    groupTitleBuilder,
     required GroupTitle Function(GroupBy) groupCreator,
     bool? showGroups,
     required Future<List<ItemType>> Function(PaginationInfo paginationInfo)
-        onLoadMore,
+    onLoadMore,
     InfiniteGroupedListSort<ItemType>? sortGroupBy,
     Widget Function(ItemType)? separatorBuilder,
     Key Function(ItemType item)? itemKeyBuilder,
@@ -55,9 +56,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     Widget Function(Object? error)? loadMoreItemsErrorWidget,
     SortOrder groupSortOrder = SortOrder.descending,
     bool stickyGroups = true,
-    Widget loadingWidget = const Center(
-      child: CircularProgressIndicator(),
-    ),
+    Widget loadingWidget = const Center(child: CircularProgressIndicator()),
     bool enableAnchoring = false,
     Color? refreshIndicatorColor,
     Color? refreshIndicatorBackgroundColor,
@@ -108,9 +107,10 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       GroupBy groupBy,
       bool isPinned,
       double scrollPercentage,
-    ) groupTitleBuilder,
+    )
+    groupTitleBuilder,
     required Future<List<ItemType>> Function(PaginationInfo paginationInfo)
-        onLoadMore,
+    onLoadMore,
     required GroupTitle Function(GroupBy) groupCreator,
     InfiniteGroupedListSort<ItemType>? sortGroupBy,
     SliverGridDelegate? gridDelegate,
@@ -125,9 +125,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     Widget Function(Object? error)? loadMoreItemsErrorWidget,
     SortOrder groupSortOrder = SortOrder.descending,
     bool stickyGroups = true,
-    Widget loadingWidget = const Center(
-      child: CircularProgressIndicator(),
-    ),
+    Widget loadingWidget = const Center(child: CircularProgressIndicator()),
     bool enableAnchoring = false,
     Color? refreshIndicatorColor,
     Color? refreshIndicatorBackgroundColor,
@@ -208,7 +206,8 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       GroupBy groupBy,
       bool isPinned,
       double scrollPercentage,
-    ) groupTitleBuilder,
+    )
+    groupTitleBuilder,
     required GroupTitle Function(GroupBy) groupCreator,
     bool? showGroups,
     InfiniteGroupedListSort<ItemType>? sortGroupBy,
@@ -222,9 +221,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     Widget Function(Object? error)? errorWidget,
     SortOrder groupSortOrder = SortOrder.descending,
     bool stickyGroups = true,
-    Widget loadingWidget = const Center(
-      child: CircularProgressIndicator(),
-    ),
+    Widget loadingWidget = const Center(child: CircularProgressIndicator()),
     bool enableAnchoring = false,
     Color? refreshIndicatorColor,
     Color? refreshIndicatorBackgroundColor,
@@ -309,7 +306,8 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       GroupBy groupBy,
       bool isPinned,
       double scrollPercentage,
-    ) groupTitleBuilder,
+    )
+    groupTitleBuilder,
     required GroupTitle Function(GroupBy) groupCreator,
     SliverGridDelegate? gridDelegate,
     bool? showGroups,
@@ -324,9 +322,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     Widget Function(Object? error)? errorWidget,
     SortOrder groupSortOrder = SortOrder.descending,
     bool stickyGroups = true,
-    Widget loadingWidget = const Center(
-      child: CircularProgressIndicator(),
-    ),
+    Widget loadingWidget = const Center(child: CircularProgressIndicator()),
     bool enableAnchoring = false,
     Color? refreshIndicatorColor,
     Color? refreshIndicatorBackgroundColor,
@@ -412,9 +408,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     this.loadMoreItemsErrorWidget,
     this.groupSortOrder = SortOrder.descending,
     this.stickyGroups = true,
-    this.loadingWidget = const Center(
-      child: CircularProgressIndicator(),
-    ),
+    this.loadingWidget = const Center(child: CircularProgressIndicator()),
     this.physics = const AlwaysScrollableScrollPhysics(),
     this.refreshIndicatorColor,
     this.refreshIndicatorBackgroundColor,
@@ -430,17 +424,17 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     this.reactiveError,
     super.key,
   }) : assert(
-          isReactiveMode
-              ? (reactiveItems != null &&
-                  reactiveIsLoading != null &&
-                  reactiveHasReachedMax != null &&
-                  onLoadMoreTriggered != null)
-              : (onLoadMore != null),
-          isReactiveMode
-              ? 'In reactive mode, reactiveItems, reactiveIsLoading, reactiveHasReachedMax, '
-                  'and onLoadMoreTriggered must be provided.'
-              : 'In imperative mode, onLoadMore must be provided.',
-        );
+         isReactiveMode
+             ? (reactiveItems != null &&
+                   reactiveIsLoading != null &&
+                   reactiveHasReachedMax != null &&
+                   onLoadMoreTriggered != null)
+             : (onLoadMore != null),
+         isReactiveMode
+             ? 'In reactive mode, reactiveItems, reactiveIsLoading, reactiveHasReachedMax, '
+                   'and onLoadMoreTriggered must be provided.'
+             : 'In imperative mode, onLoadMore must be provided.',
+       );
 
   final SliverGridDelegate? gridDelegate;
   final ListStyle listStyle;
@@ -490,7 +484,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   ///
   /// This is null in reactive mode.
   final Future<List<ItemType>> Function(PaginationInfo paginationInfo)?
-      onLoadMore;
+  onLoadMore;
 
   /// The item builder is used to build the item.
   final Widget Function(ItemType item) itemBuilder;
@@ -541,7 +535,8 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
     GroupBy groupBy,
     bool isPinned,
     double scrollPercentage,
-  ) groupTitleBuilder;
+  )
+  groupTitleBuilder;
 
   /// The widget to show when the list is loading.
   final Widget loadingWidget;
@@ -673,7 +668,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   Object? error;
 
   final _InfiniteGroupedListInternalController<ItemType, GroupBy, GroupTitle>
-      _pageInformationController = _InfiniteGroupedListInternalController();
+  _pageInformationController = _InfiniteGroupedListInternalController();
 
   late ScrollController _scrollController;
   bool _ownsScrollController = false;
@@ -790,10 +785,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     });
   }
 
-  void _scheduleHeaderContextUpdate(
-    GroupTitle title,
-    BuildContext context,
-  ) {
+  void _scheduleHeaderContextUpdate(GroupTitle title, BuildContext context) {
     if (!widget.enableAnchoring) {
       return;
     }
@@ -1256,7 +1248,8 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 
   @override
   void didUpdateWidget(
-      InfiniteGroupedList<ItemType, GroupBy, GroupTitle> oldWidget) {
+    InfiniteGroupedList<ItemType, GroupBy, GroupTitle> oldWidget,
+  ) {
     super.didUpdateWidget(oldWidget);
 
     _syncGroupManager();
@@ -1284,9 +1277,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
           widget.reactiveIsLoading != oldWidget.reactiveIsLoading ||
           widget.reactiveHasReachedMax != oldWidget.reactiveHasReachedMax ||
           widget.reactiveError != oldWidget.reactiveError) {
-        _updateState(
-          () => _applyReactiveData(forceRegroup: groupingChanged),
-        );
+        _updateState(() => _applyReactiveData(forceRegroup: groupingChanged));
       }
     } else if (groupingChanged) {
       _updateState(_rebuildGroupsFromAllItems);
@@ -1370,62 +1361,59 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     return CustomScrollView(
       controller: _scrollController,
       physics: widget.physics,
-      slivers: groupTitles.map<Widget>((title) {
-        return SliverStickyHeader.builder(
-          sticky: widget.stickyGroups,
-          builder: (context, state) {
-            // Registered even for hidden headers: the zero-size header still
-            // marks the start of its group, which is what jumpToGroup needs.
-            if (widget.enableAnchoring) {
-              _scheduleHeaderContextUpdate(title, context);
-            }
-            if (!widget.showGroups) {
-              return const SizedBox.shrink();
-            }
-            return widget.groupTitleBuilder(
-              title,
-              widget.groupBy(
-                groupedItems[title]!.first,
-              ),
-              state.isPinned,
-              state.scrollPercentage,
-            );
-          },
-          sliver: widget.listStyle == ListStyle.listView
-              ? SliverList(delegate: _buildChildrenDelegate(title))
-              : SliverGrid(
-                  gridDelegate: widget.gridDelegate ??
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        childAspectRatio: 2,
-                      ),
-                  delegate: _buildChildrenDelegate(title),
-                ),
-        );
-      }).toList()
-        ..addAll([
-          if (loading)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 14.0,
-                  top: 5.0,
-                ),
-                child: widget.loadingWidget,
-              ),
-            ),
-          if (hasError)
-            SliverToBoxAdapter(
-              child: widget.loadMoreItemsErrorWidget?.call(error) ??
-                  Text(
-                    'Oops something went wrong !',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                      fontSize: 20,
+      slivers:
+          groupTitles.map<Widget>((title) {
+            return SliverStickyHeader.builder(
+              sticky: widget.stickyGroups,
+              builder: (context, state) {
+                // Registered even for hidden headers: the zero-size header still
+                // marks the start of its group, which is what jumpToGroup needs.
+                if (widget.enableAnchoring) {
+                  _scheduleHeaderContextUpdate(title, context);
+                }
+                if (!widget.showGroups) {
+                  return const SizedBox.shrink();
+                }
+                return widget.groupTitleBuilder(
+                  title,
+                  widget.groupBy(groupedItems[title]!.first),
+                  state.isPinned,
+                  state.scrollPercentage,
+                );
+              },
+              sliver: widget.listStyle == ListStyle.listView
+                  ? SliverList(delegate: _buildChildrenDelegate(title))
+                  : SliverGrid(
+                      gridDelegate:
+                          widget.gridDelegate ??
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 2,
+                          ),
+                      delegate: _buildChildrenDelegate(title),
                     ),
-                  ),
-            ),
-        ]),
+            );
+          }).toList()..addAll([
+            if (loading)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 14.0, top: 5.0),
+                  child: widget.loadingWidget,
+                ),
+              ),
+            if (hasError)
+              SliverToBoxAdapter(
+                child:
+                    widget.loadMoreItemsErrorWidget?.call(error) ??
+                    Text(
+                      'Oops something went wrong !',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                        fontSize: 20,
+                      ),
+                    ),
+              ),
+          ]),
     );
   }
 
@@ -1445,11 +1433,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     }
 
     final content = groupTitles.isEmpty
-        ? EmptyList(
-            widget: widget,
-            hasError: hasError,
-            error: error,
-          )
+        ? EmptyList(widget: widget, hasError: hasError, error: error)
         : _buildList();
 
     if (!widget.showRefreshIndicator) {
@@ -1480,9 +1464,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
 /// 5. Jump to a specific group when anchoring is enabled.
 class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
   /// The constructor for the controller.
-  InfiniteGroupedListController({
-    this.limit = 20,
-  });
+  InfiniteGroupedListController({this.limit = 20});
 
   List<ItemType> Function()? _getItemsCallback;
 
@@ -1496,9 +1478,8 @@ class InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> {
 
   void Function(bool Function(ItemType) predicate)? _removeWhereCallback;
 
-  Future<bool> Function(
-    _JumpToGroupRequest<GroupTitle, GroupBy> request,
-  )? _jumpToGroupCallback;
+  Future<bool> Function(_JumpToGroupRequest<GroupTitle, GroupBy> request)?
+  _jumpToGroupCallback;
 
   bool _isReactiveMode = false;
 

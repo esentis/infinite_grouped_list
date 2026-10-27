@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
 import 'package:infinite_grouped_list/infinite_grouped_list.dart';
+import 'package:material_ui/material_ui.dart';
 
 class JumpToGroupExample extends StatefulWidget {
   const JumpToGroupExample({super.key});
@@ -73,7 +73,10 @@ class _JumpToGroupExampleState extends State<JumpToGroupExample> {
         enableAnchoring: true,
         controller: _controller,
         groupBy: (item) => DateTime(
-            item.dateTime.year, item.dateTime.month, item.dateTime.day),
+          item.dateTime.year,
+          item.dateTime.month,
+          item.dateTime.day,
+        ),
         sortGroupBy: (item) => item.dateTime,
         groupCreator: (date) {
           final now = DateTime.now();
@@ -83,7 +86,7 @@ class _JumpToGroupExampleState extends State<JumpToGroupExample> {
           }
           return '${_monthNames[date.month - 1]} ${date.day}, ${date.year}';
         },
-        groupTitleBuilder: (title, _, __, ___) => Container(
+        groupTitleBuilder: (title, _, _, _) => Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           color: Colors.grey[200],
           child: Text(

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:infinite_grouped_list/src/infinite_grouped_list.dart';
+import 'package:material_ui/material_ui.dart';
 
 class EmptyList extends StatelessWidget {
   const EmptyList({
@@ -22,25 +22,25 @@ class EmptyList extends StatelessWidget {
           child: Center(
             child: hasError
                 ? widget.initialItemsErrorWidget?.call(error) ??
-                    Center(
-                      child: Text(
-                        'Something went wrong while fetching items',
+                      Center(
+                        child: Text(
+                          'Something went wrong while fetching items',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontSize: 20,
+                          ),
+                        ),
+                      )
+                : widget.noItemsFoundWidget ??
+                      Text(
+                        'No items found',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 20,
                         ),
                       ),
-                    )
-                : widget.noItemsFoundWidget ??
-                    Text(
-                      'No items found',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 20,
-                      ),
-                    ),
           ),
         ),
       ],

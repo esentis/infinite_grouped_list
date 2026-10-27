@@ -3,7 +3,7 @@ import 'package:example/group_by_date_grid_example.dart';
 import 'package:example/group_by_type_example.dart';
 import 'package:example/jump_to_group_example.dart';
 import 'package:example/reactive_bloc_example.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   runApp(const MyApp());
@@ -55,7 +55,8 @@ class ExampleSelectionPage extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const ReactiveBlocExample()),
+                  builder: (context) => const ReactiveBlocExample(),
+                ),
               ),
               isNew: true,
             ),
@@ -70,7 +71,8 @@ class ExampleSelectionPage extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const JumpToGroupExample()),
+                  builder: (context) => const JumpToGroupExample(),
+                ),
               ),
               isNew: true,
             ),
@@ -84,7 +86,8 @@ class ExampleSelectionPage extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const GroupByDateExample()),
+                  builder: (context) => const GroupByDateExample(),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -97,7 +100,8 @@ class ExampleSelectionPage extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const GroupByTypeExample()),
+                  builder: (context) => const GroupByTypeExample(),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -110,7 +114,8 @@ class ExampleSelectionPage extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const GroupByDateGridExample()),
+                  builder: (context) => const GroupByDateGridExample(),
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -123,8 +128,10 @@ class ExampleSelectionPage extends StatelessWidget {
                     SizedBox(height: 8),
                     Text(
                       'New: Reactive Pattern Support',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     SizedBox(height: 8),
                     Text(
@@ -167,11 +174,7 @@ class ExampleSelectionPage extends StatelessWidget {
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 32,
-                ),
+                child: Icon(icon, color: color, size: 32),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -192,7 +195,9 @@ class ExampleSelectionPage extends StatelessWidget {
                         if (isNew)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.red,
                               borderRadius: BorderRadius.circular(12),
@@ -211,19 +216,13 @@ class ExampleSelectionPage extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(
-                Icons.chevron_right,
-                color: Colors.grey[400],
-              ),
+              Icon(Icons.chevron_right, color: Colors.grey[400]),
             ],
           ),
         ),

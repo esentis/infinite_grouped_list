@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:infinite_grouped_list/infinite_grouped_list.dart';
+import 'package:material_ui/material_ui.dart';
 
 // Models
 class Item {
@@ -99,15 +99,9 @@ class ItemsBloc extends Bloc<ItemsEvent, ItemsState> {
       await Future.delayed(const Duration(milliseconds: 800));
 
       final newItems = _generateMockItems(0, 20);
-      emit(state.copyWith(
-        items: newItems,
-        isLoading: false,
-      ));
+      emit(state.copyWith(items: newItems, isLoading: false));
     } catch (e) {
-      emit(state.copyWith(
-        isLoading: false,
-        error: 'Failed to load items: $e',
-      ));
+      emit(state.copyWith(isLoading: false, error: 'Failed to load items: $e'));
     }
   }
 
@@ -129,16 +123,20 @@ class ItemsBloc extends Bloc<ItemsEvent, ItemsState> {
       // Simulate reaching max after 100 items
       final hasReachedMax = state.items.length + newItems.length >= 100;
 
-      emit(state.copyWith(
-        items: [...state.items, ...newItems],
-        isLoading: false,
-        hasReachedMax: hasReachedMax,
-      ));
+      emit(
+        state.copyWith(
+          items: [...state.items, ...newItems],
+          isLoading: false,
+          hasReachedMax: hasReachedMax,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        isLoading: false,
-        error: 'Failed to load more items: $e',
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: 'Failed to load more items: $e',
+        ),
+      );
     }
   }
 
@@ -153,13 +151,9 @@ class ItemsBloc extends Bloc<ItemsEvent, ItemsState> {
       await Future.delayed(const Duration(milliseconds: 1000));
 
       final newItems = _generateMockItems(0, 20);
-      emit(ItemsState(
-        items: newItems,
-      ));
+      emit(ItemsState(items: newItems));
     } catch (e) {
-      emit(ItemsState(
-        error: 'Failed to refresh items: $e',
-      ));
+      emit(ItemsState(error: 'Failed to refresh items: $e'));
     }
   }
 }
@@ -247,44 +241,48 @@ class ReactiveBlocExample extends StatelessWidget {
 
               groupTitleBuilder: (title, groupBy, isPinned, scrollPercentage) =>
                   Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: isPinned ? _getCategoryColor(title) : Colors.grey[100],
-                  border: Border(
-                    bottom: BorderSide(
-                      color: _getCategoryColor(title),
-                      width: 2,
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isPinned
+                          ? _getCategoryColor(title)
+                          : Colors.grey[100],
+                      border: Border(
+                        bottom: BorderSide(
+                          color: _getCategoryColor(title),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _getCategoryIcon(title),
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (isPinned)
+                          const Icon(
+                            Icons.push_pin,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                      ],
                     ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      _getCategoryIcon(title),
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (isPinned)
-                      const Icon(
-                        Icons.push_pin,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                  ],
-                ),
-              ),
 
               // Error widget
               errorWidget: (error) => Container(

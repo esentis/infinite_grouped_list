@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:infinite_grouped_list/infinite_grouped_list.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Offset-based fake backend over `0..total-1`.
 Future<List<int>> Function(PaginationInfo) _pagedSource(
@@ -19,8 +19,9 @@ void main() {
     // The test binding runs as Android, i.e. clamping physics: content shorter
     // than the viewport cannot be scrolled, so no scroll event ever fires.
 
-    testWidgets('imperative mode loads pages until the viewport is filled',
-        (WidgetTester tester) async {
+    testWidgets('imperative mode loads pages until the viewport is filled', (
+      WidgetTester tester,
+    ) async {
       var calls = 0;
       final scrollController = ScrollController();
       addTearDown(scrollController.dispose);
@@ -33,7 +34,7 @@ void main() {
             itemBuilder: (i) => SizedBox(height: 10, child: Text('$i')),
             groupBy: (_) => 0,
             groupCreator: (_) => 'all',
-            groupTitleBuilder: (_, __, ___, ____) => const SizedBox(height: 20),
+            groupTitleBuilder: (_, _, _, _) => const SizedBox(height: 20),
           ),
         ),
       );
@@ -45,8 +46,9 @@ void main() {
       expect(scrollController.position.maxScrollExtent, greaterThan(100));
     });
 
-    testWidgets('imperative mode stops filling once the data is exhausted',
-        (WidgetTester tester) async {
+    testWidgets('imperative mode stops filling once the data is exhausted', (
+      WidgetTester tester,
+    ) async {
       var calls = 0;
 
       await tester.pumpWidget(
@@ -56,7 +58,7 @@ void main() {
             itemBuilder: (i) => SizedBox(height: 10, child: Text('$i')),
             groupBy: (_) => 0,
             groupCreator: (_) => 'all',
-            groupTitleBuilder: (_, __, ___, ____) => const SizedBox(height: 20),
+            groupTitleBuilder: (_, _, _, _) => const SizedBox(height: 20),
           ),
         ),
       );
@@ -68,8 +70,9 @@ void main() {
       expect(find.text('29'), findsOneWidget);
     });
 
-    testWidgets('imperative mode refills after removals shrink the content',
-        (WidgetTester tester) async {
+    testWidgets('imperative mode refills after removals shrink the content', (
+      WidgetTester tester,
+    ) async {
       var calls = 0;
       final controller = InfiniteGroupedListController<int, int, String>();
 
@@ -81,7 +84,7 @@ void main() {
             itemBuilder: (i) => SizedBox(height: 10, child: Text('$i')),
             groupBy: (_) => 0,
             groupCreator: (_) => 'all',
-            groupTitleBuilder: (_, __, ___, ____) => const SizedBox(height: 20),
+            groupTitleBuilder: (_, _, _, _) => const SizedBox(height: 20),
           ),
         ),
       );
@@ -94,8 +97,9 @@ void main() {
       expect(calls, greaterThan(callsBeforeRemoval));
     });
 
-    testWidgets('reactive mode requests more items without a scroll',
-        (WidgetTester tester) async {
+    testWidgets('reactive mode requests more items without a scroll', (
+      WidgetTester tester,
+    ) async {
       var triggers = 0;
 
       Widget build({required bool hasReachedMax}) {
@@ -108,7 +112,7 @@ void main() {
             itemBuilder: (item) => SizedBox(height: 48, child: Text(item)),
             groupBy: (_) => 'all',
             groupCreator: (groupBy) => groupBy,
-            groupTitleBuilder: (_, __, ___, ____) => const SizedBox(height: 32),
+            groupTitleBuilder: (_, _, _, _) => const SizedBox(height: 32),
           ),
         );
       }
@@ -146,16 +150,16 @@ void main() {
               separatorBuilder: separatorBuilder,
               groupBy: (_) => 0,
               groupCreator: (_) => 'all',
-              groupTitleBuilder: (_, __, ___, ____) =>
-                  const SizedBox(height: 20),
+              groupTitleBuilder: (_, _, _, _) => const SizedBox(height: 20),
             ),
           ),
         ),
       );
     }
 
-    testWidgets('without a separator the item takes the whole cell',
-        (WidgetTester tester) async {
+    testWidgets('without a separator the item takes the whole cell', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(buildGrid());
       await tester.pumpAndSettle();
 
@@ -165,8 +169,9 @@ void main() {
       );
     });
 
-    testWidgets('with a separator the item takes the space that remains',
-        (WidgetTester tester) async {
+    testWidgets('with a separator the item takes the space that remains', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         buildGrid(separatorBuilder: (_) => const SizedBox(height: 10)),
       );
@@ -187,48 +192,51 @@ void main() {
 
   group('re-grouping only happens when needed', () {
     testWidgets(
-        'imperative: with a groupingKey, inline closures do not re-group on '
-        'parent rebuilds', (WidgetTester tester) async {
-      var creatorCalls = 0;
+      'imperative: with a groupingKey, inline closures do not re-group on '
+      'parent rebuilds',
+      (WidgetTester tester) async {
+        var creatorCalls = 0;
 
-      Widget build(Object groupingKey, String Function(String) groupBy) {
-        return MaterialApp(
-          home: InfiniteGroupedList<String, String, String>(
-            groupingKey: groupingKey,
-            onLoadMore: (_) async => <String>['A-1', 'B-1'],
-            groupBy: groupBy,
-            groupCreator: (groupBy) {
-              creatorCalls++;
-              return groupBy;
-            },
-            groupTitleBuilder: (title, _, __, ___) => Text('Header $title'),
-            itemBuilder: (item) => Text(item),
-          ),
+        Widget build(Object groupingKey, String Function(String) groupBy) {
+          return MaterialApp(
+            home: InfiniteGroupedList<String, String, String>(
+              groupingKey: groupingKey,
+              onLoadMore: (_) async => <String>['A-1', 'B-1'],
+              groupBy: groupBy,
+              groupCreator: (groupBy) {
+                creatorCalls++;
+                return groupBy;
+              },
+              groupTitleBuilder: (title, _, _, _) => Text('Header $title'),
+              itemBuilder: (item) => Text(item),
+            ),
+          );
+        }
+
+        await tester.pumpWidget(build('all', (_) => 'all'));
+        await tester.pumpAndSettle();
+        expect(find.text('Header all'), findsOneWidget);
+
+        creatorCalls = 0;
+        // Parent rebuild: new closure instances, same grouping key.
+        await tester.pumpWidget(build('all', (_) => 'all'));
+        await tester.pumpAndSettle();
+        expect(creatorCalls, 0);
+
+        // Changing the key re-groups with the new callbacks.
+        await tester.pumpWidget(
+          build('prefix', (item) => item.split('-').first),
         );
-      }
+        await tester.pumpAndSettle();
+        expect(find.text('Header all'), findsNothing);
+        expect(find.text('Header A'), findsOneWidget);
+        expect(find.text('Header B'), findsOneWidget);
+      },
+    );
 
-      await tester.pumpWidget(build('all', (_) => 'all'));
-      await tester.pumpAndSettle();
-      expect(find.text('Header all'), findsOneWidget);
-
-      creatorCalls = 0;
-      // Parent rebuild: new closure instances, same grouping key.
-      await tester.pumpWidget(build('all', (_) => 'all'));
-      await tester.pumpAndSettle();
-      expect(creatorCalls, 0);
-
-      // Changing the key re-groups with the new callbacks.
-      await tester.pumpWidget(
-        build('prefix', (item) => item.split('-').first),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Header all'), findsNothing);
-      expect(find.text('Header A'), findsOneWidget);
-      expect(find.text('Header B'), findsOneWidget);
-    });
-
-    testWidgets('changing groupSortOrder re-groups even with a groupingKey',
-        (WidgetTester tester) async {
+    testWidgets('changing groupSortOrder re-groups even with a groupingKey', (
+      WidgetTester tester,
+    ) async {
       Widget build(SortOrder order) {
         return MaterialApp(
           home: InfiniteGroupedList<int, int, String>(
@@ -238,7 +246,7 @@ void main() {
             onLoadMore: (_) async => <int>[1, 2],
             groupBy: (_) => 0,
             groupCreator: (_) => 'all',
-            groupTitleBuilder: (_, __, ___, ____) => const SizedBox(height: 20),
+            groupTitleBuilder: (_, _, _, _) => const SizedBox(height: 20),
             itemBuilder: (i) => SizedBox(height: 40, child: Text('$i')),
           ),
         );
@@ -281,7 +289,7 @@ void main() {
             groupCreator: groupCreator,
             sortGroupBy: sortBy,
             groupSortOrder: SortOrder.ascending,
-            groupTitleBuilder: (title, _, __, ___) => Text('Header $title'),
+            groupTitleBuilder: (title, _, _, _) => Text('Header $title'),
             itemBuilder: (item) => SizedBox(height: 30, child: Text(item)),
           ),
         );
@@ -289,8 +297,9 @@ void main() {
 
       setUp(() => creatorCalls = 0);
 
-      testWidgets('a loading-only change does not re-group',
-          (WidgetTester tester) async {
+      testWidgets('a loading-only change does not re-group', (
+        WidgetTester tester,
+      ) async {
         final items = List<String>.generate(100, (i) => 'A-$i');
         await tester.pumpWidget(build(items));
         await tester.pumpAndSettle();
@@ -302,8 +311,9 @@ void main() {
         expect(creatorCalls, 0);
       });
 
-      testWidgets('an appended page only groups the new items',
-          (WidgetTester tester) async {
+      testWidgets('an appended page only groups the new items', (
+        WidgetTester tester,
+      ) async {
         final items = List<String>.generate(100, (i) => 'A-$i');
         await tester.pumpWidget(build(items));
         await tester.pumpAndSettle();
@@ -315,8 +325,9 @@ void main() {
         expect(creatorCalls, 3);
       });
 
-      testWidgets('a non-append change falls back to a full re-group',
-          (WidgetTester tester) async {
+      testWidgets('a non-append change falls back to a full re-group', (
+        WidgetTester tester,
+      ) async {
         final items = List<String>.generate(100, (i) => 'A-$i');
         await tester.pumpWidget(build(items));
         await tester.pumpAndSettle();
@@ -329,8 +340,9 @@ void main() {
         expect(find.text('Header B'), findsOneWidget);
       });
 
-      testWidgets('appended groups keep first-encounter order and sorting',
-          (WidgetTester tester) async {
+      testWidgets('appended groups keep first-encounter order and sorting', (
+        WidgetTester tester,
+      ) async {
         await tester.pumpWidget(build(<String>['B-2', 'A-1']));
         await tester.pumpAndSettle();
 
@@ -344,8 +356,9 @@ void main() {
         expect(top('A-1'), lessThan(top('Header C')));
       });
 
-      testWidgets('an external list mutated in place is still picked up',
-          (WidgetTester tester) async {
+      testWidgets('an external list mutated in place is still picked up', (
+        WidgetTester tester,
+      ) async {
         final items = <String>['A-1'];
         await tester.pumpWidget(build(items, isLoading: true));
         await tester.pump();
@@ -360,8 +373,9 @@ void main() {
     });
   });
 
-  testWidgets('reactive controller.loadItems() retries while an error is set',
-      (WidgetTester tester) async {
+  testWidgets('reactive controller.loadItems() retries while an error is set', (
+    WidgetTester tester,
+  ) async {
     var triggers = 0;
     final controller = InfiniteGroupedListController<String, String, String>();
 
@@ -377,7 +391,7 @@ void main() {
           itemBuilder: (item) => SizedBox(height: 48, child: Text(item)),
           groupBy: (_) => 'all',
           groupCreator: (groupBy) => groupBy,
-          groupTitleBuilder: (_, __, ___, ____) => const SizedBox(height: 32),
+          groupTitleBuilder: (_, _, _, _) => const SizedBox(height: 32),
         ),
       ),
     );
@@ -394,8 +408,9 @@ void main() {
     expect(triggers, 1);
   });
 
-  testWidgets('jumpToGroup works when group headers are hidden',
-      (WidgetTester tester) async {
+  testWidgets('jumpToGroup works when group headers are hidden', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
 
     await tester.pumpWidget(
@@ -412,7 +427,7 @@ void main() {
                 ],
           groupBy: (item) => item.split('-').first,
           groupCreator: (groupBy) => groupBy,
-          groupTitleBuilder: (title, _, __, ___) => Text('Header $title'),
+          groupTitleBuilder: (title, _, _, _) => Text('Header $title'),
           itemBuilder: (item) => SizedBox(height: 48, child: Text(item)),
         ),
       ),

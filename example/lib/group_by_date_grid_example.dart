@@ -2,17 +2,10 @@
 
 import 'dart:math';
 
-import 'package:flutter/material.dart';
 import 'package:infinite_grouped_list/infinite_grouped_list.dart';
+import 'package:material_ui/material_ui.dart';
 
-enum TransactionType {
-  transport,
-  food,
-  shopping,
-  entertainment,
-  health,
-  other,
-}
+enum TransactionType { transport, food, shopping, entertainment, health, other }
 
 class Transaction {
   final String name;
@@ -64,9 +57,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({
-    super.key,
-  });
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -80,19 +71,16 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<List<Transaction>> onLoadMore(int offset) async {
     await Future.delayed(const Duration(seconds: 1));
 
-    return List<Transaction>.generate(
-      20,
-      (index) {
-        final tempDate = baseDate;
-        baseDate = baseDate.subtract(const Duration(days: 1));
-        return Transaction(
-          name: 'Transaction num #$index',
-          dateTime: tempDate,
-          amount: Random().nextDouble() * 1000,
-          type: TransactionType.values[Random().nextInt(6)],
-        );
-      },
-    );
+    return List<Transaction>.generate(20, (index) {
+      final tempDate = baseDate;
+      baseDate = baseDate.subtract(const Duration(days: 1));
+      return Transaction(
+        name: 'Transaction num #$index',
+        dateTime: tempDate,
+        amount: Random().nextDouble() * 1000,
+        type: TransactionType.values[Random().nextInt(6)],
+      );
+    });
   }
 
   Widget getTransactionIcon(TransactionType type) {
@@ -132,32 +120,32 @@ class _MyHomePageState extends State<MyHomePage> {
         sortGroupBy: (item) => item.dateTime,
         groupTitleBuilder: (title, groupBy, isPinned, scrollPercentage) =>
             Padding(
-          padding: const EdgeInsets.only(bottom: 12.0, top: 12.0),
-          child: Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 5,
-                  offset: Offset(0, 2),
+              padding: const EdgeInsets.only(bottom: 12.0, top: 12.0),
+              child: Container(
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 5,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
         itemBuilder: (item) => Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -179,9 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Text(item.name),
                 Text(
                   '${item.amount.toStringAsFixed(2)}€',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
             ),

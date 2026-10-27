@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:infinite_grouped_list/src/helpers/pagination_info.dart';
 import 'package:infinite_grouped_list/src/infinite_grouped_list.dart';
+import 'package:material_ui/material_ui.dart';
 
 class _TrackingScrollController extends ScrollController {
   bool disposed = false;
@@ -45,7 +45,7 @@ class _CounterTileState extends State<_CounterTile> {
 Widget _buildImperativeList({
   required InfiniteGroupedListController<String, String, String> controller,
   required Future<List<String>> Function(PaginationInfo paginationInfo)
-      onLoadMore,
+  onLoadMore,
   ScrollController? scrollController,
   VoidCallback? onNoMoreItemsFound,
   bool enableAnchoring = false,
@@ -59,8 +59,12 @@ Widget _buildImperativeList({
   String Function(String item)? groupBy,
   String Function(String groupBy)? groupCreator,
   Widget Function(
-          String title, String groupBy, bool isPinned, double scrollPercentage)?
-      groupTitleBuilder,
+    String title,
+    String groupBy,
+    bool isPinned,
+    double scrollPercentage,
+  )?
+  groupTitleBuilder,
   InfiniteGroupedListRefreshCallback? onRefresh,
   Widget? loadingWidget,
 }) {
@@ -82,21 +86,14 @@ Widget _buildImperativeList({
         initialItemsErrorWidget: initialItemsErrorWidget,
         groupBy: groupBy ?? (_) => 'group',
         groupCreator: groupCreator ?? (groupBy) => groupBy,
-        groupTitleBuilder: groupTitleBuilder ??
-            (_, __, ___, ____) => Container(
-                  height: 32,
-                  color: Colors.grey.shade200,
-                ),
-        loadingWidget: loadingWidget ??
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
+        groupTitleBuilder:
+            groupTitleBuilder ??
+            (_, _, _, _) => Container(height: 32, color: Colors.grey.shade200),
+        loadingWidget:
+            loadingWidget ?? const Center(child: CircularProgressIndicator()),
         itemBuilder: (item) => SizedBox(
           height: 48,
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(item),
-          ),
+          child: Align(alignment: Alignment.centerLeft, child: Text(item)),
         ),
         separatorBuilder: (_) => const Divider(height: 1),
         loadMoreItemsErrorWidget: loadMoreItemsErrorWidget,
@@ -108,7 +105,7 @@ Widget _buildImperativeList({
 Widget _buildImperativeGrid({
   required InfiniteGroupedListController<String, String, String> controller,
   required Future<List<String>> Function(PaginationInfo paginationInfo)
-      onLoadMore,
+  onLoadMore,
 }) {
   return MaterialApp(
     home: SizedBox(
@@ -122,10 +119,8 @@ Widget _buildImperativeGrid({
         ),
         groupBy: (_) => 'grid',
         groupCreator: (groupBy) => groupBy,
-        groupTitleBuilder: (_, __, ___, ____) => Container(
-          height: 32,
-          color: Colors.grey.shade200,
-        ),
+        groupTitleBuilder: (_, _, _, _) =>
+            Container(height: 32, color: Colors.grey.shade200),
         itemBuilder: (item) => Text(item),
       ),
     ),
@@ -150,16 +145,11 @@ Widget _buildReactiveList({
         onLoadMoreTriggered: onLoadMoreTriggered,
         groupBy: (_) => 'group',
         groupCreator: (groupBy) => groupBy,
-        groupTitleBuilder: (_, __, ___, ____) => Container(
-          height: 32,
-          color: Colors.grey.shade200,
-        ),
+        groupTitleBuilder: (_, _, _, _) =>
+            Container(height: 32, color: Colors.grey.shade200),
         itemBuilder: (item) => SizedBox(
           height: 48,
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(item),
-          ),
+          child: Align(alignment: Alignment.centerLeft, child: Text(item)),
         ),
       ),
     ),
@@ -167,8 +157,9 @@ Widget _buildReactiveList({
 }
 
 void main() {
-  testWidgets('list items receive full cross-axis constraints',
-      (WidgetTester tester) async {
+  testWidgets('list items receive full cross-axis constraints', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
     const itemKey = Key('item');
 
@@ -185,12 +176,9 @@ void main() {
               onLoadMore: (_) async => <String>['Item 1'],
               groupBy: (_) => 'group',
               groupCreator: (groupBy) => groupBy,
-              groupTitleBuilder: (_, __, ___, ____) => const SizedBox.shrink(),
-              itemBuilder: (_) => const SizedBox(
-                key: itemKey,
-                width: 120,
-                height: 48,
-              ),
+              groupTitleBuilder: (_, _, _, _) => const SizedBox.shrink(),
+              itemBuilder: (_) =>
+                  const SizedBox(key: itemKey, width: 120, height: 48),
             ),
           ),
         ),
@@ -204,10 +192,7 @@ void main() {
   test('controller jumpToGroup validates its arguments', () {
     final controller = InfiniteGroupedListController<String, String, String>();
 
-    expect(
-      () => controller.jumpToGroup(),
-      throwsA(isA<ArgumentError>()),
-    );
+    expect(() => controller.jumpToGroup(), throwsA(isA<ArgumentError>()));
     expect(
       () => controller.jumpToGroup(
         title: 'A',
@@ -216,10 +201,7 @@ void main() {
       throwsA(isA<ArgumentError>()),
     );
     expect(
-      () => controller.jumpToGroup(
-        title: 'A',
-        maxRetries: -1,
-      ),
+      () => controller.jumpToGroup(title: 'A', maxRetries: -1),
       throwsA(isA<ArgumentError>()),
     );
   });
@@ -232,23 +214,18 @@ void main() {
     expect(found, isFalse);
   });
 
-  testWidgets('imperative widget loads initial and next pages',
-      (WidgetTester tester) async {
+  testWidgets('imperative widget loads initial and next pages', (
+    WidgetTester tester,
+  ) async {
     var index = 0;
     final controller = InfiniteGroupedListController<String, String, String>();
 
     Future<List<String>> onLoadMore(PaginationInfo paginationInfo) async {
-      return List<String>.generate(
-        20,
-        (_) => 'Item ${index++}',
-      );
+      return List<String>.generate(20, (_) => 'Item ${index++}');
     }
 
     await tester.pumpWidget(
-      _buildImperativeList(
-        controller: controller,
-        onLoadMore: onLoadMore,
-      ),
+      _buildImperativeList(controller: controller, onLoadMore: onLoadMore),
     );
     await tester.pumpAndSettle();
 
@@ -275,8 +252,9 @@ void main() {
     expect(find.text('Grid 3'), findsOneWidget);
   });
 
-  testWidgets('loadItems awaits imperative pagination completion',
-      (WidgetTester tester) async {
+  testWidgets('loadItems awaits imperative pagination completion', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
     final secondPageCompleter = Completer<List<String>>();
     var calls = 0;
@@ -292,10 +270,7 @@ void main() {
     }
 
     await tester.pumpWidget(
-      _buildImperativeList(
-        controller: controller,
-        onLoadMore: onLoadMore,
-      ),
+      _buildImperativeList(controller: controller, onLoadMore: onLoadMore),
     );
     await tester.pumpAndSettle();
 
@@ -312,8 +287,9 @@ void main() {
     expect(controller.getItems().last, 'Item 20');
   });
 
-  testWidgets('addItems respects the provided insertion index',
-      (WidgetTester tester) async {
+  testWidgets('addItems respects the provided insertion index', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
 
     await tester.pumpWidget(
@@ -325,7 +301,7 @@ void main() {
             onLoadMore: (_) async => <String>['A', 'C'],
             groupBy: (_) => 'group',
             groupCreator: (groupBy) => groupBy,
-            groupTitleBuilder: (title, _, __, ___) => Text(title),
+            groupTitleBuilder: (title, _, _, _) => Text(title),
             itemBuilder: (item) => Text(item),
           ),
         ),
@@ -339,8 +315,9 @@ void main() {
     expect(controller.getItems(), orderedEquals(<String>['A', 'B', 'C']));
   });
 
-  testWidgets('controller remove and removeWhere update imperative items',
-      (WidgetTester tester) async {
+  testWidgets('controller remove and removeWhere update imperative items', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
 
     await tester.pumpWidget(
@@ -361,56 +338,55 @@ void main() {
   });
 
   testWidgets(
-      'reactive scrolling triggers load more once until external state updates',
-      (WidgetTester tester) async {
-    final controller = InfiniteGroupedListController<String, String, String>();
-    var triggerCount = 0;
-    var isLoading = false;
-    var items = List<String>.generate(30, (index) => 'Reactive Item $index');
+    'reactive scrolling triggers load more once until external state updates',
+    (WidgetTester tester) async {
+      final controller =
+          InfiniteGroupedListController<String, String, String>();
+      var triggerCount = 0;
+      var isLoading = false;
+      var items = List<String>.generate(30, (index) => 'Reactive Item $index');
 
-    Future<void> pumpReactiveList() async {
-      await tester.pumpWidget(
-        _buildReactiveList(
-          controller: controller,
-          items: items,
-          isLoading: isLoading,
-          hasReachedMax: false,
-          onLoadMoreTriggered: () {
-            triggerCount++;
-          },
-        ),
-      );
+      Future<void> pumpReactiveList() async {
+        await tester.pumpWidget(
+          _buildReactiveList(
+            controller: controller,
+            items: items,
+            isLoading: isLoading,
+            hasReachedMax: false,
+            onLoadMoreTriggered: () {
+              triggerCount++;
+            },
+          ),
+        );
+        await tester.pump();
+      }
+
+      await pumpReactiveList();
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -1200));
       await tester.pump();
-    }
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
+      await tester.pump();
 
-    await pumpReactiveList();
+      expect(triggerCount, 1);
 
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -1200));
-    await tester.pump();
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
-    await tester.pump();
+      isLoading = true;
+      await pumpReactiveList();
 
-    expect(triggerCount, 1);
+      isLoading = false;
+      items = <String>[...items, 'Reactive Item 30', 'Reactive Item 31'];
+      await pumpReactiveList();
 
-    isLoading = true;
-    await pumpReactiveList();
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
+      await tester.pump();
 
-    isLoading = false;
-    items = <String>[
-      ...items,
-      'Reactive Item 30',
-      'Reactive Item 31',
-    ];
-    await pumpReactiveList();
+      expect(triggerCount, 2);
+    },
+  );
 
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
-    await tester.pump();
-
-    expect(triggerCount, 2);
-  });
-
-  testWidgets('imperative refresh awaits the optional onRefresh callback',
-      (WidgetTester tester) async {
+  testWidgets('imperative refresh awaits the optional onRefresh callback', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
     final refreshCompleter = Completer<void>();
     var loadCalls = 0;
@@ -440,8 +416,33 @@ void main() {
     expect(controller.getItems(), orderedEquals(<String>['Item 2']));
   });
 
-  testWidgets('refresh reloads even when a load-more is already in flight',
-      (WidgetTester tester) async {
+  testWidgets('pull to refresh reloads the first page', (
+    WidgetTester tester,
+  ) async {
+    final controller = InfiniteGroupedListController<String, String, String>();
+    var loadCalls = 0;
+
+    await tester.pumpWidget(
+      _buildImperativeList(
+        controller: controller,
+        onLoadMore: (_) async {
+          loadCalls++;
+          return <String>['Item $loadCalls'];
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.fling(find.text('Item 1'), const Offset(0, 300), 1000);
+    await tester.pumpAndSettle();
+
+    expect(loadCalls, 2);
+    expect(controller.getItems(), orderedEquals(<String>['Item 2']));
+  });
+
+  testWidgets('refresh reloads even when a load-more is already in flight', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
     final secondPageCompleter = Completer<List<String>>();
     final loadedOffsets = <int>[];
@@ -462,10 +463,7 @@ void main() {
     }
 
     await tester.pumpWidget(
-      _buildImperativeList(
-        controller: controller,
-        onLoadMore: onLoadMore,
-      ),
+      _buildImperativeList(controller: controller, onLoadMore: onLoadMore),
     );
     await tester.pumpAndSettle();
     expect(loadedOffsets, orderedEquals(<int>[0]));
@@ -480,8 +478,9 @@ void main() {
     await tester.pump();
 
     // Let the in-flight load-more settle; refresh must still perform its reload.
-    secondPageCompleter
-        .complete(List<String>.generate(20, (index) => 'B$index'));
+    secondPageCompleter.complete(
+      List<String>.generate(20, (index) => 'B$index'),
+    );
     await loadFuture;
     await refreshFuture;
     await tester.pumpAndSettle();
@@ -492,44 +491,45 @@ void main() {
   });
 
   testWidgets(
-      'separator renders between items but not after the last item of a group',
-      (WidgetTester tester) async {
-    final controller = InfiniteGroupedListController<String, String, String>();
+    'separator renders between items but not after the last item of a group',
+    (WidgetTester tester) async {
+      final controller =
+          InfiniteGroupedListController<String, String, String>();
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: SizedBox(
-          height: 800,
-          child: InfiniteGroupedList<String, String, String>(
-            controller: controller,
-            showRefreshIndicator: false,
-            onLoadMore: (_) async => <String>['G1-a', 'G1-b', 'G1-c', 'G2-a'],
-            groupBy: (item) => item.split('-').first,
-            groupCreator: (groupBy) => groupBy,
-            groupTitleBuilder: (title, _, __, ___) => SizedBox(
-              height: 24,
-              child: Text('H:$title'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SizedBox(
+            height: 800,
+            child: InfiniteGroupedList<String, String, String>(
+              controller: controller,
+              showRefreshIndicator: false,
+              onLoadMore: (_) async => <String>['G1-a', 'G1-b', 'G1-c', 'G2-a'],
+              groupBy: (item) => item.split('-').first,
+              groupCreator: (groupBy) => groupBy,
+              groupTitleBuilder: (title, _, _, _) =>
+                  SizedBox(height: 24, child: Text('H:$title')),
+              separatorBuilder: (_) => const Divider(height: 1),
+              itemBuilder: (item) => SizedBox(height: 40, child: Text(item)),
             ),
-            separatorBuilder: (_) => const Divider(height: 1),
-            itemBuilder: (item) => SizedBox(height: 40, child: Text(item)),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    // All items are laid out inside the tall viewport.
-    expect(find.text('G1-a'), findsOneWidget);
-    expect(find.text('G1-c'), findsOneWidget);
-    expect(find.text('G2-a'), findsOneWidget);
+      // All items are laid out inside the tall viewport.
+      expect(find.text('G1-a'), findsOneWidget);
+      expect(find.text('G1-c'), findsOneWidget);
+      expect(find.text('G2-a'), findsOneWidget);
 
-    // Group G1 (3 items) has 2 separators, group G2 (1 item) has none, so a
-    // trailing separator after the last item of each group would over-count.
-    expect(find.byType(Divider), findsNWidgets(2));
-  });
+      // Group G1 (3 items) has 2 separators, group G2 (1 item) has none, so a
+      // trailing separator after the last item of each group would over-count.
+      expect(find.byType(Divider), findsNWidgets(2));
+    },
+  );
 
-  testWidgets('controller replacement detaches old controller callbacks',
-      (WidgetTester tester) async {
+  testWidgets('controller replacement detaches old controller callbacks', (
+    WidgetTester tester,
+  ) async {
     final oldController =
         InfiniteGroupedListController<String, String, String>();
     final newController =
@@ -578,8 +578,9 @@ void main() {
     expect(newScrollController.disposed, isFalse);
   });
 
-  testWidgets('shows a custom empty state without a refresh indicator',
-      (WidgetTester tester) async {
+  testWidgets('shows a custom empty state without a refresh indicator', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
 
     await tester.pumpWidget(
@@ -596,8 +597,9 @@ void main() {
     expect(find.byType(RefreshIndicator), findsNothing);
   });
 
-  testWidgets('shows a custom initial error widget when the first page fails',
-      (WidgetTester tester) async {
+  testWidgets('shows a custom initial error widget when the first page fails', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
 
     await tester.pumpWidget(
@@ -612,8 +614,9 @@ void main() {
     expect(find.textContaining('Initial error:'), findsOneWidget);
   });
 
-  testWidgets('failed refresh keeps rendered and controller items consistent',
-      (WidgetTester tester) async {
+  testWidgets('failed refresh keeps rendered and controller items consistent', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
     var calls = 0;
 
@@ -626,10 +629,7 @@ void main() {
     }
 
     await tester.pumpWidget(
-      _buildImperativeList(
-        controller: controller,
-        onLoadMore: onLoadMore,
-      ),
+      _buildImperativeList(controller: controller, onLoadMore: onLoadMore),
     );
     await tester.pumpAndSettle();
 
@@ -641,8 +641,9 @@ void main() {
     expect(find.text('Oops something went wrong !'), findsOneWidget);
   });
 
-  testWidgets('short first page marks the list as exhausted once',
-      (WidgetTester tester) async {
+  testWidgets('short first page marks the list as exhausted once', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
     var noMoreCalls = 0;
     var loadCalls = 0;
@@ -670,115 +671,124 @@ void main() {
     expect(noMoreCalls, 1);
   });
 
-  testWidgets('shows a custom load more error widget after incremental failure',
-      (WidgetTester tester) async {
-    final controller =
-        InfiniteGroupedListController<String, String, String>(limit: 1);
-    var calls = 0;
+  testWidgets(
+    'shows a custom load more error widget after incremental failure',
+    (WidgetTester tester) async {
+      final controller = InfiniteGroupedListController<String, String, String>(
+        limit: 1,
+      );
+      var calls = 0;
 
-    await tester.pumpWidget(
-      _buildImperativeList(
-        controller: controller,
-        onLoadMore: (_) async {
-          calls++;
-          if (calls == 1) {
-            return <String>['Only item'];
-          }
-          throw Exception('load more failed');
-        },
-        loadMoreItemsErrorWidget: (error) => Text('Load more error: $error'),
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        _buildImperativeList(
+          controller: controller,
+          onLoadMore: (_) async {
+            calls++;
+            if (calls == 1) {
+              return <String>['Only item'];
+            }
+            throw Exception('load more failed');
+          },
+          loadMoreItemsErrorWidget: (error) => Text('Load more error: $error'),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    await controller.loadItems();
-    await tester.pumpAndSettle();
+      await controller.loadItems();
+      await tester.pumpAndSettle();
 
-    expect(find.textContaining('Load more error:'), findsOneWidget);
-  });
+      expect(find.textContaining('Load more error:'), findsOneWidget);
+    },
+  );
 
   testWidgets(
-      'jumpToGroup returns false and exposes the error when loading additional pages fails',
-      (WidgetTester tester) async {
-    final controller = InfiniteGroupedListController<String, String, String>();
-    var calls = 0;
+    'jumpToGroup returns false and exposes the error when loading additional pages fails',
+    (WidgetTester tester) async {
+      final controller =
+          InfiniteGroupedListController<String, String, String>();
+      var calls = 0;
 
-    Future<List<String>> onLoadMore(PaginationInfo paginationInfo) async {
-      calls++;
-      if (calls == 1) {
-        return <String>['Group A'];
+      Future<List<String>> onLoadMore(PaginationInfo paginationInfo) async {
+        calls++;
+        if (calls == 1) {
+          return <String>['Group A'];
+        }
+        throw Exception('network');
       }
-      throw Exception('network');
-    }
 
-    await tester.pumpWidget(
-      _buildImperativeList(
-        controller: controller,
-        enableAnchoring: true,
-        onLoadMore: onLoadMore,
-        groupBy: (item) => item,
-        groupCreator: (groupBy) => groupBy,
-        groupTitleBuilder: (title, _, __, ___) => Container(
-          height: 32,
-          color: Colors.grey.shade200,
-          child: Text(title),
+      await tester.pumpWidget(
+        _buildImperativeList(
+          controller: controller,
+          enableAnchoring: true,
+          onLoadMore: onLoadMore,
+          groupBy: (item) => item,
+          groupCreator: (groupBy) => groupBy,
+          groupTitleBuilder: (title, _, _, _) => Container(
+            height: 32,
+            color: Colors.grey.shade200,
+            child: Text(title),
+          ),
+          loadMoreItemsErrorWidget: (error) => const Text('Load more error'),
         ),
-        loadMoreItemsErrorWidget: (error) => const Text('Load more error'),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    final found = await controller.jumpToGroup(
-      predicate: (title, groupBy) => title == 'Missing Group',
-      loadUntilFound: true,
-    );
-    await tester.pumpAndSettle();
+      final found = await controller.jumpToGroup(
+        predicate: (title, groupBy) => title == 'Missing Group',
+        loadUntilFound: true,
+      );
+      await tester.pumpAndSettle();
 
-    expect(found, isFalse);
-  });
+      expect(found, isFalse);
+    },
+  );
 
   testWidgets(
-      'jumpToGroup uses 3 retries by default when loadUntilFound is true',
-      (WidgetTester tester) async {
-    final controller =
-        InfiniteGroupedListController<String, String, String>(limit: 1);
-    var calls = 0;
+    'jumpToGroup uses 3 retries by default when loadUntilFound is true',
+    (WidgetTester tester) async {
+      final controller = InfiniteGroupedListController<String, String, String>(
+        limit: 1,
+      );
+      var calls = 0;
 
-    await tester.pumpWidget(
-      _buildImperativeList(
-        controller: controller,
-        enableAnchoring: true,
-        onLoadMore: (_) async {
-          calls++;
-          return <String>['Group $calls'];
-        },
-        groupBy: (item) => item,
-        groupCreator: (groupBy) => groupBy,
-        groupTitleBuilder: (title, _, __, ___) => Container(
-          height: 32,
-          color: Colors.grey.shade200,
-          child: Text(title),
+      await tester.pumpWidget(
+        _buildImperativeList(
+          controller: controller,
+          enableAnchoring: true,
+          onLoadMore: (_) async {
+            calls++;
+            return <String>['Group $calls'];
+          },
+          groupBy: (item) => item,
+          groupCreator: (groupBy) => groupBy,
+          groupTitleBuilder: (title, _, _, _) => Container(
+            height: 32,
+            color: Colors.grey.shade200,
+            child: Text(title),
+          ),
         ),
-      ),
+      );
+      await tester.pumpAndSettle();
+      // Pages loaded to fill the viewport are not jump retries.
+      final callsBeforeJump = calls;
+
+      final found = await controller.jumpToGroup(
+        predicate: (title, groupBy) => title == 'Missing Group',
+        loadUntilFound: true,
+      );
+      await tester.pumpAndSettle();
+
+      expect(found, isFalse);
+      expect(calls - callsBeforeJump, 3);
+    },
+  );
+
+  testWidgets('jumpToGroup respects a custom maxRetries value', (
+    WidgetTester tester,
+  ) async {
+    final controller = InfiniteGroupedListController<String, String, String>(
+      limit: 1,
     );
-    await tester.pumpAndSettle();
-    // Pages loaded to fill the viewport are not jump retries.
-    final callsBeforeJump = calls;
-
-    final found = await controller.jumpToGroup(
-      predicate: (title, groupBy) => title == 'Missing Group',
-      loadUntilFound: true,
-    );
-    await tester.pumpAndSettle();
-
-    expect(found, isFalse);
-    expect(calls - callsBeforeJump, 3);
-  });
-
-  testWidgets('jumpToGroup respects a custom maxRetries value',
-      (WidgetTester tester) async {
-    final controller =
-        InfiniteGroupedListController<String, String, String>(limit: 1);
     var calls = 0;
 
     await tester.pumpWidget(
@@ -791,7 +801,7 @@ void main() {
         },
         groupBy: (item) => item,
         groupCreator: (groupBy) => groupBy,
-        groupTitleBuilder: (title, _, __, ___) => Container(
+        groupTitleBuilder: (title, _, _, _) => Container(
           height: 32,
           color: Colors.grey.shade200,
           child: Text(title),
@@ -813,8 +823,9 @@ void main() {
     expect(calls - callsBeforeJump, 1);
   });
 
-  testWidgets('jumpToGroup succeeds by title when anchoring is enabled',
-      (WidgetTester tester) async {
+  testWidgets('jumpToGroup succeeds by title when anchoring is enabled', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
 
     await tester.pumpWidget(
@@ -824,7 +835,7 @@ void main() {
         onLoadMore: (_) async => <String>['A', 'B'],
         groupBy: (item) => item,
         groupCreator: (groupBy) => groupBy,
-        groupTitleBuilder: (title, _, __, ___) => Container(
+        groupTitleBuilder: (title, _, _, _) => Container(
           height: 32,
           color: Colors.grey.shade200,
           child: Text('Header $title'),
@@ -833,16 +844,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final found = await controller.jumpToGroup(
-      title: 'B',
-      animate: false,
-    );
+    final found = await controller.jumpToGroup(title: 'B', animate: false);
 
     expect(found, isTrue);
   });
 
-  testWidgets('jumpToGroup throws when anchoring is disabled',
-      (WidgetTester tester) async {
+  testWidgets('jumpToGroup throws when anchoring is disabled', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
 
     await tester.pumpWidget(
@@ -860,46 +869,49 @@ void main() {
   });
 
   testWidgets(
-      'reactive jumpToGroup with loadUntilFound throws unsupported error',
-      (WidgetTester tester) async {
-    final controller = InfiniteGroupedListController<String, String, String>();
+    'reactive jumpToGroup with loadUntilFound throws unsupported error',
+    (WidgetTester tester) async {
+      final controller =
+          InfiniteGroupedListController<String, String, String>();
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: SizedBox(
-          height: 320,
-          child: InfiniteGroupedList<String, String, String>.reactive(
-            controller: controller,
-            enableAnchoring: true,
-            items: const <String>['A'],
-            isLoading: false,
-            hasReachedMax: false,
-            onLoadMoreTriggered: () {},
-            groupBy: (item) => item,
-            groupCreator: (groupBy) => groupBy,
-            groupTitleBuilder: (title, _, __, ___) => Container(
-              height: 32,
-              color: Colors.grey.shade200,
-              child: Text(title),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SizedBox(
+            height: 320,
+            child: InfiniteGroupedList<String, String, String>.reactive(
+              controller: controller,
+              enableAnchoring: true,
+              items: const <String>['A'],
+              isLoading: false,
+              hasReachedMax: false,
+              onLoadMoreTriggered: () {},
+              groupBy: (item) => item,
+              groupCreator: (groupBy) => groupBy,
+              groupTitleBuilder: (title, _, _, _) => Container(
+                height: 32,
+                color: Colors.grey.shade200,
+                child: Text(title),
+              ),
+              itemBuilder: (item) => Text(item),
             ),
-            itemBuilder: (item) => Text(item),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    await expectLater(
-      controller.jumpToGroup(
-        predicate: (title, groupBy) => false,
-        loadUntilFound: true,
-      ),
-      throwsA(isA<UnsupportedError>()),
-    );
-  });
+      await expectLater(
+        controller.jumpToGroup(
+          predicate: (title, groupBy) => false,
+          loadUntilFound: true,
+        ),
+        throwsA(isA<UnsupportedError>()),
+      );
+    },
+  );
 
-  testWidgets('showGroups false hides group headers',
-      (WidgetTester tester) async {
+  testWidgets('showGroups false hides group headers', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
 
     await tester.pumpWidget(
@@ -909,7 +921,7 @@ void main() {
         showGroups: false,
         groupBy: (item) => item,
         groupCreator: (groupBy) => groupBy,
-        groupTitleBuilder: (title, _, __, ___) => Text('Header $title'),
+        groupTitleBuilder: (title, _, _, _) => Text('Header $title'),
       ),
     );
     await tester.pumpAndSettle();
@@ -918,63 +930,70 @@ void main() {
     expect(find.text('Item 1'), findsOneWidget);
   });
 
-  testWidgets('custom loading widget is shown while the first page is pending',
-      (WidgetTester tester) async {
-    final controller = InfiniteGroupedListController<String, String, String>();
-    final completer = Completer<List<String>>();
+  testWidgets(
+    'custom loading widget is shown while the first page is pending',
+    (WidgetTester tester) async {
+      final controller =
+          InfiniteGroupedListController<String, String, String>();
+      final completer = Completer<List<String>>();
 
-    await tester.pumpWidget(
-      _buildImperativeList(
-        controller: controller,
-        onLoadMore: (_) => completer.future,
-        loadingWidget: const Text('Loading now'),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.text('Loading now'), findsOneWidget);
-
-    completer.complete(<String>['Loaded']);
-    await tester.pumpAndSettle();
-
-    expect(find.text('Loaded'), findsOneWidget);
-  });
-
-  testWidgets('didUpdateWidget re-groups existing items when grouping changes',
-      (WidgetTester tester) async {
-    final controller = InfiniteGroupedListController<String, String, String>();
-
-    Widget buildWidget(String Function(String item) groupBy) {
-      return MaterialApp(
-        home: SizedBox(
-          height: 320,
-          child: InfiniteGroupedList<String, String, String>(
-            controller: controller,
-            onLoadMore: (_) async => <String>['A-1', 'B-1'],
-            groupBy: groupBy,
-            groupCreator: (groupBy) => groupBy,
-            groupTitleBuilder: (title, _, __, ___) => Text('Header $title'),
-            itemBuilder: (item) => Text(item),
-          ),
+      await tester.pumpWidget(
+        _buildImperativeList(
+          controller: controller,
+          onLoadMore: (_) => completer.future,
+          loadingWidget: const Text('Loading now'),
         ),
       );
-    }
+      await tester.pump();
 
-    await tester.pumpWidget(buildWidget((_) => 'all'));
-    await tester.pumpAndSettle();
+      expect(find.text('Loading now'), findsOneWidget);
 
-    expect(find.text('Header all'), findsOneWidget);
+      completer.complete(<String>['Loaded']);
+      await tester.pumpAndSettle();
 
-    await tester.pumpWidget(buildWidget((item) => item.split('-').first));
-    await tester.pumpAndSettle();
+      expect(find.text('Loaded'), findsOneWidget);
+    },
+  );
 
-    expect(find.text('Header all'), findsNothing);
-    expect(find.text('Header A'), findsOneWidget);
-    expect(find.text('Header B'), findsOneWidget);
-  });
+  testWidgets(
+    'didUpdateWidget re-groups existing items when grouping changes',
+    (WidgetTester tester) async {
+      final controller =
+          InfiniteGroupedListController<String, String, String>();
 
-  testWidgets('isPaged false prevents scroll-based pagination',
-      (WidgetTester tester) async {
+      Widget buildWidget(String Function(String item) groupBy) {
+        return MaterialApp(
+          home: SizedBox(
+            height: 320,
+            child: InfiniteGroupedList<String, String, String>(
+              controller: controller,
+              onLoadMore: (_) async => <String>['A-1', 'B-1'],
+              groupBy: groupBy,
+              groupCreator: (groupBy) => groupBy,
+              groupTitleBuilder: (title, _, _, _) => Text('Header $title'),
+              itemBuilder: (item) => Text(item),
+            ),
+          ),
+        );
+      }
+
+      await tester.pumpWidget(buildWidget((_) => 'all'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Header all'), findsOneWidget);
+
+      await tester.pumpWidget(buildWidget((item) => item.split('-').first));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Header all'), findsNothing);
+      expect(find.text('Header A'), findsOneWidget);
+      expect(find.text('Header B'), findsOneWidget);
+    },
+  );
+
+  testWidgets('isPaged false prevents scroll-based pagination', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
     var calls = 0;
 
@@ -996,8 +1015,9 @@ void main() {
     expect(calls, 1);
   });
 
-  testWidgets('InfiniteGroupedList.reactiveGrid widget test',
-      (WidgetTester tester) async {
+  testWidgets('InfiniteGroupedList.reactiveGrid widget test', (
+    WidgetTester tester,
+  ) async {
     var loadMoreTriggered = false;
     final controller = InfiniteGroupedListController<String, String, String>();
     final items = List<String>.generate(6, (i) => 'Grid Item $i');
@@ -1014,7 +1034,7 @@ void main() {
               loadMoreTriggered = true;
             },
             itemBuilder: (item) => Text(item),
-            groupTitleBuilder: (title, __, ___, ____) => Text('Group: $title'),
+            groupTitleBuilder: (title, _, _, _) => Text('Group: $title'),
             groupBy: (item) => item.split(' ')[0],
             groupCreator: (groupBy) => groupBy,
             controller: controller,
@@ -1036,67 +1056,67 @@ void main() {
   });
 
   testWidgets(
-      'items with equal sort keys keep their arrival order across pages',
-      (WidgetTester tester) async {
-    final controller = InfiniteGroupedListController<String, String, String>();
-    var calls = 0;
+    'items with equal sort keys keep their arrival order across pages',
+    (WidgetTester tester) async {
+      final controller =
+          InfiniteGroupedListController<String, String, String>();
+      var calls = 0;
 
-    // Two full pages, then the source is exhausted. The tall surface is
-    // never filled, so the second page is fetched automatically.
-    Future<List<String>> onLoadMore(PaginationInfo paginationInfo) async {
-      if (paginationInfo.page > 2) {
-        return <String>[];
+      // Two full pages, then the source is exhausted. The tall surface is
+      // never filled, so the second page is fetched automatically.
+      Future<List<String>> onLoadMore(PaginationInfo paginationInfo) async {
+        if (paginationInfo.page > 2) {
+          return <String>[];
+        }
+        return List<String>.generate(20, (index) => 'SameKey ${calls++}');
       }
-      return List<String>.generate(
-        20,
-        (index) => 'SameKey ${calls++}',
-      );
-    }
 
-    await tester.binding.setSurfaceSize(const Size(600, 4000));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(600, 4000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: InfiniteGroupedList<String, String, String>(
-          controller: controller,
-          showRefreshIndicator: false,
-          onLoadMore: onLoadMore,
-          groupBy: (_) => 'group',
-          groupCreator: (groupBy) => groupBy,
-          sortGroupBy: (_) => 1,
-          groupTitleBuilder: (_, __, ___, ____) => const SizedBox(height: 32),
-          itemBuilder: (item) => SizedBox(height: 48, child: Text(item)),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await controller.loadItems();
-    await tester.pumpAndSettle();
-
-    expect(controller.getItems(), hasLength(40));
-
-    final renderedTexts = tester
-        .widgetList<Text>(
-          find.byWidgetPredicate(
-            (widget) => widget is Text && widget.data!.startsWith('SameKey '),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: InfiniteGroupedList<String, String, String>(
+            controller: controller,
+            showRefreshIndicator: false,
+            onLoadMore: onLoadMore,
+            groupBy: (_) => 'group',
+            groupCreator: (groupBy) => groupBy,
+            sortGroupBy: (_) => 1,
+            groupTitleBuilder: (_, _, _, _) => const SizedBox(height: 32),
+            itemBuilder: (item) => SizedBox(height: 48, child: Text(item)),
           ),
-        )
-        .map((text) => text.data!)
-        .toList();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    // Dart's List.sort is unstable for >= 40 equal elements, so without an
-    // insertion-order tie-break the rendered order can deviate from the
-    // order in which the pages arrived.
-    expect(
-      renderedTexts,
-      List<String>.generate(40, (index) => 'SameKey $index'),
-    );
-  });
+      await controller.loadItems();
+      await tester.pumpAndSettle();
 
-  testWidgets('default empty text follows the theme in dark mode',
-      (WidgetTester tester) async {
+      expect(controller.getItems(), hasLength(40));
+
+      final renderedTexts = tester
+          .widgetList<Text>(
+            find.byWidgetPredicate(
+              (widget) => widget is Text && widget.data!.startsWith('SameKey '),
+            ),
+          )
+          .map((text) => text.data!)
+          .toList();
+
+      // Dart's List.sort is unstable for >= 40 equal elements, so without an
+      // insertion-order tie-break the rendered order can deviate from the
+      // order in which the pages arrived.
+      expect(
+        renderedTexts,
+        List<String>.generate(40, (index) => 'SameKey $index'),
+      );
+    },
+  );
+
+  testWidgets('default empty text follows the theme in dark mode', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
     final theme = ThemeData.dark();
 
@@ -1110,7 +1130,7 @@ void main() {
             onLoadMore: (_) async => <String>[],
             groupBy: (_) => 'group',
             groupCreator: (groupBy) => groupBy,
-            groupTitleBuilder: (_, __, ___, ____) => const SizedBox.shrink(),
+            groupTitleBuilder: (_, _, _, _) => const SizedBox.shrink(),
             itemBuilder: (item) => Text(item),
           ),
         ),
@@ -1122,8 +1142,9 @@ void main() {
     expect(emptyText.style?.color, theme.colorScheme.onSurface);
   });
 
-  testWidgets('default initial error text follows the theme in dark mode',
-      (WidgetTester tester) async {
+  testWidgets('default initial error text follows the theme in dark mode', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
     final theme = ThemeData.dark();
 
@@ -1137,7 +1158,7 @@ void main() {
             onLoadMore: (_) async => throw Exception('boom'),
             groupBy: (_) => 'group',
             groupCreator: (groupBy) => groupBy,
-            groupTitleBuilder: (_, __, ___, ____) => const SizedBox.shrink(),
+            groupTitleBuilder: (_, _, _, _) => const SizedBox.shrink(),
             itemBuilder: (item) => Text(item),
           ),
         ),
@@ -1151,10 +1172,12 @@ void main() {
     expect(errorText.style?.color, theme.colorScheme.error);
   });
 
-  testWidgets('default load more error text follows the theme in dark mode',
-      (WidgetTester tester) async {
-    final controller =
-        InfiniteGroupedListController<String, String, String>(limit: 1);
+  testWidgets('default load more error text follows the theme in dark mode', (
+    WidgetTester tester,
+  ) async {
+    final controller = InfiniteGroupedListController<String, String, String>(
+      limit: 1,
+    );
     final theme = ThemeData.dark();
     var calls = 0;
 
@@ -1174,7 +1197,7 @@ void main() {
             },
             groupBy: (_) => 'group',
             groupCreator: (groupBy) => groupBy,
-            groupTitleBuilder: (_, __, ___, ____) => const SizedBox.shrink(),
+            groupTitleBuilder: (_, _, _, _) => const SizedBox.shrink(),
             itemBuilder: (item) => Text(item),
           ),
         ),
@@ -1192,140 +1215,149 @@ void main() {
   });
 
   testWidgets(
-      'swapping from an internal to an external scroll controller stays consistent',
-      (WidgetTester tester) async {
-    final controller = InfiniteGroupedListController<String, String, String>();
-    final externalScrollController = ScrollController();
+    'swapping from an internal to an external scroll controller stays consistent',
+    (WidgetTester tester) async {
+      final controller =
+          InfiniteGroupedListController<String, String, String>();
+      final externalScrollController = ScrollController();
 
-    // First build without an external controller: the widget owns one
-    // internally and is responsible for disposing it.
-    await tester.pumpWidget(
-      _buildImperativeList(
-        controller: controller,
-        onLoadMore: (_) async => <String>['A'],
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    // Swap in an external controller. The internally owned controller is
-    // detached here; disposal must be deferred until the child Scrollable has
-    // released its position.
-    await tester.pumpWidget(
-      _buildImperativeList(
-        controller: controller,
-        scrollController: externalScrollController,
-        onLoadMore: (_) async => <String>['A'],
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -200));
-    await tester.pumpAndSettle();
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pumpAndSettle();
-
-    expect(tester.takeException(), isNull);
-    expect(externalScrollController.hasClients, isFalse);
-  });
-  testWidgets(
-      'itemKeyBuilder preserves item state when an earlier item is removed',
-      (WidgetTester tester) async {
-    final controller = InfiniteGroupedListController<String, String, String>();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: SizedBox(
-          height: 320,
-          child: InfiniteGroupedList<String, String, String>(
-            controller: controller,
-            showRefreshIndicator: false,
-            onLoadMore: (_) async => <String>['A0', 'A1', 'A2'],
-            groupBy: (_) => 'group',
-            groupCreator: (groupBy) => groupBy,
-            groupTitleBuilder: (_, __, ___, ____) => const SizedBox(height: 32),
-            itemBuilder: (item) => _CounterTile(item),
-            itemKeyBuilder: (item) => ValueKey<String>(item),
-          ),
+      // First build without an external controller: the widget owns one
+      // internally and is responsible for disposing it.
+      await tester.pumpWidget(
+        _buildImperativeList(
+          controller: controller,
+          onLoadMore: (_) async => <String>['A'],
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('A0:0'), findsOneWidget);
-    expect(find.text('A1:0'), findsOneWidget);
-    expect(find.text('A2:0'), findsOneWidget);
+      // Swap in an external controller. The internally owned controller is
+      // detached here; disposal must be deferred until the child Scrollable has
+      // released its position.
+      await tester.pumpWidget(
+        _buildImperativeList(
+          controller: controller,
+          scrollController: externalScrollController,
+          onLoadMore: (_) async => <String>['A'],
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    // Give the surviving tiles some state to lose.
-    await tester.tap(find.text('A1:0'));
-    await tester.tap(find.text('A2:0'));
-    await tester.pumpAndSettle();
-    expect(find.text('A1:1'), findsOneWidget);
-    expect(find.text('A2:1'), findsOneWidget);
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -200));
+      await tester.pumpAndSettle();
 
-    controller.remove('A0');
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
 
-    // Without findChildIndexCallback, the elements for A1/A2 would be
-    // recreated at their shifted indices and their tap counters would reset.
-    expect(find.text('A0:1'), findsNothing);
-    expect(find.text('A1:0'), findsNothing);
-    expect(find.text('A1:1'), findsOneWidget);
-    expect(find.text('A2:1'), findsOneWidget);
-  });
-
+      expect(tester.takeException(), isNull);
+      expect(externalScrollController.hasClients, isFalse);
+    },
+  );
   testWidgets(
-      'itemKeyBuilder preserves item state in grid when an earlier item is removed',
-      (WidgetTester tester) async {
-    final controller = InfiniteGroupedListController<String, String, String>();
+    'itemKeyBuilder preserves item state when an earlier item is removed',
+    (WidgetTester tester) async {
+      final controller =
+          InfiniteGroupedListController<String, String, String>();
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: SizedBox(
-          height: 320,
-          child: InfiniteGroupedList<String, String, String>.gridView(
-            controller: controller,
-            onLoadMore: (_) async => <String>['G0', 'G1', 'G2'],
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 4,
-              crossAxisSpacing: 4,
-              childAspectRatio: 3,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SizedBox(
+            height: 320,
+            child: InfiniteGroupedList<String, String, String>(
+              controller: controller,
+              showRefreshIndicator: false,
+              onLoadMore: (_) async => <String>['A0', 'A1', 'A2'],
+              groupBy: (_) => 'group',
+              groupCreator: (groupBy) => groupBy,
+              groupTitleBuilder: (_, _, _, _) => const SizedBox(height: 32),
+              itemBuilder: (item) => _CounterTile(item),
+              itemKeyBuilder: (item) => ValueKey<String>(item),
             ),
-            groupBy: (_) => 'grid',
-            groupCreator: (groupBy) => groupBy,
-            groupTitleBuilder: (_, __, ___, ____) => const SizedBox(height: 32),
-            itemBuilder: (item) => _CounterTile(item),
-            itemKeyBuilder: (item) => ValueKey<String>(item),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('G0:0'), findsOneWidget);
-    expect(find.text('G2:0'), findsOneWidget);
+      expect(find.text('A0:0'), findsOneWidget);
+      expect(find.text('A1:0'), findsOneWidget);
+      expect(find.text('A2:0'), findsOneWidget);
 
-    await tester.tap(find.text('G1:0'));
-    await tester.tap(find.text('G2:0'));
-    await tester.pumpAndSettle();
-    expect(find.text('G2:1'), findsOneWidget);
+      // Give the surviving tiles some state to lose.
+      await tester.tap(find.text('A1:0'));
+      await tester.tap(find.text('A2:0'));
+      await tester.pumpAndSettle();
+      expect(find.text('A1:1'), findsOneWidget);
+      expect(find.text('A2:1'), findsOneWidget);
 
-    controller.remove('G0');
-    await tester.pumpAndSettle();
+      controller.remove('A0');
+      await tester.pumpAndSettle();
 
-    expect(find.text('G0:0'), findsNothing);
-    expect(find.text('G1:0'), findsNothing);
-    expect(find.text('G1:1'), findsOneWidget);
-    expect(find.text('G2:1'), findsOneWidget);
-  });
+      // Without findChildIndexCallback, the elements for A1/A2 would be
+      // recreated at their shifted indices and their tap counters would reset.
+      expect(find.text('A0:1'), findsNothing);
+      expect(find.text('A1:0'), findsNothing);
+      expect(find.text('A1:1'), findsOneWidget);
+      expect(find.text('A2:1'), findsOneWidget);
+    },
+  );
 
-  testWidgets('reactive mode re-groups immediately when grouping changes',
-      (WidgetTester tester) async {
+  testWidgets(
+    'itemKeyBuilder preserves item state in grid when an earlier item is removed',
+    (WidgetTester tester) async {
+      final controller =
+          InfiniteGroupedListController<String, String, String>();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SizedBox(
+            height: 320,
+            child: InfiniteGroupedList<String, String, String>.gridView(
+              controller: controller,
+              onLoadMore: (_) async => <String>['G0', 'G1', 'G2'],
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 4,
+                crossAxisSpacing: 4,
+                childAspectRatio: 3,
+              ),
+              groupBy: (_) => 'grid',
+              groupCreator: (groupBy) => groupBy,
+              groupTitleBuilder: (_, _, _, _) => const SizedBox(height: 32),
+              itemBuilder: (item) => _CounterTile(item),
+              itemKeyBuilder: (item) => ValueKey<String>(item),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('G0:0'), findsOneWidget);
+      expect(find.text('G2:0'), findsOneWidget);
+
+      await tester.tap(find.text('G1:0'));
+      await tester.tap(find.text('G2:0'));
+      await tester.pumpAndSettle();
+      expect(find.text('G2:1'), findsOneWidget);
+
+      controller.remove('G0');
+      await tester.pumpAndSettle();
+
+      expect(find.text('G0:0'), findsNothing);
+      expect(find.text('G1:0'), findsNothing);
+      expect(find.text('G1:1'), findsOneWidget);
+      expect(find.text('G2:1'), findsOneWidget);
+    },
+  );
+
+  testWidgets('reactive mode re-groups immediately when grouping changes', (
+    WidgetTester tester,
+  ) async {
     final controller = InfiniteGroupedListController<String, String, String>();
 
-    Widget buildWith(String Function(String item) groupBy,
-        {List<String> items = const <String>['A-1', 'B-1']}) {
+    Widget buildWith(
+      String Function(String item) groupBy, {
+      List<String> items = const <String>['A-1', 'B-1'],
+    }) {
       return MaterialApp(
         home: SizedBox(
           height: 320,
@@ -1337,7 +1369,7 @@ void main() {
             onLoadMoreTriggered: () {},
             groupBy: groupBy,
             groupCreator: (groupBy) => groupBy,
-            groupTitleBuilder: (title, _, __, ___) => Text('Header $title'),
+            groupTitleBuilder: (title, _, _, _) => Text('Header $title'),
             itemBuilder: (item) => Text(item),
           ),
         ),
@@ -1349,9 +1381,7 @@ void main() {
     expect(find.text('Header all'), findsOneWidget);
 
     // Only the grouping callbacks change; the external data stays identical.
-    await tester.pumpWidget(
-      buildWith((item) => item.split('-').first),
-    );
+    await tester.pumpWidget(buildWith((item) => item.split('-').first));
     await tester.pumpAndSettle();
 
     expect(find.text('Header all'), findsNothing);
@@ -1372,34 +1402,36 @@ void main() {
   });
 
   testWidgets(
-      'reactive mode controller throws errors for unsupported operations',
-      (WidgetTester tester) async {
-    final controller = InfiniteGroupedListController<String, String, String>();
+    'reactive mode controller throws errors for unsupported operations',
+    (WidgetTester tester) async {
+      final controller =
+          InfiniteGroupedListController<String, String, String>();
 
-    await tester.pumpWidget(
-      _buildReactiveList(
-        controller: controller,
-        items: const <String>['Item 1'],
-        isLoading: false,
-        hasReachedMax: false,
-        onLoadMoreTriggered: () {},
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        _buildReactiveList(
+          controller: controller,
+          items: const <String>['Item 1'],
+          isLoading: false,
+          hasReachedMax: false,
+          onLoadMoreTriggered: () {},
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(
-      () => controller.addItems(<String>['New Item']),
-      throwsA(isA<UnsupportedError>()),
-    );
+      expect(
+        () => controller.addItems(<String>['New Item']),
+        throwsA(isA<UnsupportedError>()),
+      );
 
-    expect(
-      () => controller.remove('Item 1'),
-      throwsA(isA<UnsupportedError>()),
-    );
+      expect(
+        () => controller.remove('Item 1'),
+        throwsA(isA<UnsupportedError>()),
+      );
 
-    expect(
-      () => controller.removeWhere((item) => item == 'Item 1'),
-      throwsA(isA<UnsupportedError>()),
-    );
-  });
+      expect(
+        () => controller.removeWhere((item) => item == 'Item 1'),
+        throwsA(isA<UnsupportedError>()),
+      );
+    },
+  );
 }

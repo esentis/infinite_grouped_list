@@ -1,3 +1,19 @@
+## 2.0.0
+
+### Breaking
+
+- Migrated from `package:flutter/material.dart` to the standalone [`material_ui`](https://pub.dev/packages/material_ui) package. In apps built on `material_ui`, pull-to-refresh threw `No MaterialLocalizations found`, and the default loading indicator and empty/error texts ignored the app's theme.
+- Minimum SDK raised to Dart `3.12.0` / Flutter `3.44.0`, as required by `material_ui`.
+
+### Migration
+
+- Run `flutter pub add material_ui` and `dart fix --apply --code=migrate_design_widgets` in your app.
+- Apps still on `package:flutter/material.dart` should stay on `infinite_grouped_list: ^1.6.0`.
+
+### Tests
+
+- Added a pull-to-refresh widget test.
+
 ## 1.6.0
 
 ### Added
