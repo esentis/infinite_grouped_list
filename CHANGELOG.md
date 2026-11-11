@@ -1,3 +1,21 @@
+## 2.1.0
+
+### Added
+
+- Bundled agent skills under `skills/`, which app developers can install with `dart run skills@ get`:
+  - `infinite-grouped-list-pagination`: imperative `onLoadMore` mode (page size, errors and retry, grouping, controller, `jumpToGroup`, grids).
+  - `infinite-grouped-list-reactive`: `.reactive()` / `.reactiveGrid()` with BLoC, Riverpod or Provider (state contract, load-trigger guard, refresh, errors).
+
+### Fixed
+
+- A controller shared across a remount (for example when the list's `key` changes) is no longer detached. The new list attached first, then the old one's `dispose` cleared the controller, so `getItems()` returned `[]` and `refresh()`, `loadItems()` and `jumpToGroup()` silently did nothing.
+- After a failed refresh in imperative mode, `controller.loadItems()` now retries the first page. It used to fetch the page after the stale items and append it.
+- In reactive mode, pull-to-refresh is now off unless `onRefresh` is set, since without it the gesture did nothing. Pass `showRefreshIndicator: true` to keep the old behaviour.
+
+### Tests
+
+- Added `test/regression_2_1_0_test.dart` covering the three fixes above.
+
 ## 2.0.0
 
 ### Breaking

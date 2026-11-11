@@ -259,7 +259,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       refreshIndicatorBackgroundColor: refreshIndicatorBackgroundColor,
       listStyle: ListStyle.listView,
       physics: physics ?? const AlwaysScrollableScrollPhysics(),
-      showRefreshIndicator: showRefreshIndicator ?? true,
+      showRefreshIndicator: showRefreshIndicator ?? onRefresh != null,
       showGroups: showGroups ?? true,
       scrollController: scrollController,
       key: key,
@@ -361,7 +361,7 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
       gridDelegate: gridDelegate,
       listStyle: ListStyle.grid,
       physics: physics ?? const AlwaysScrollableScrollPhysics(),
-      showRefreshIndicator: showRefreshIndicator ?? true,
+      showRefreshIndicator: showRefreshIndicator ?? onRefresh != null,
       showGroups: showGroups ?? true,
       scrollController: scrollController,
       key: key,
@@ -625,7 +625,10 @@ class InfiniteGroupedList<ItemType, GroupBy, GroupTitle>
   /// Defaults to [AlwaysScrollableScrollPhysics]
   final ScrollPhysics physics;
 
-  /// Whether to show the refresh indicator when the user pulls to refresh. Defaults to true.
+  /// Whether to show the refresh indicator when the user pulls to refresh.
+  ///
+  /// Defaults to true in imperative mode. In reactive mode a refresh only
+  /// awaits [onRefresh], so it defaults to `onRefresh != null`.
   final bool showRefreshIndicator;
 
   /// The scroll controller of the list.
@@ -674,6 +677,10 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   bool _ownsScrollController = false;
   bool _reactiveLoadPending = false;
   bool _viewportFillCheckScheduled = false;
+
+  /// Set when a first-page load (initial load or refresh) failed, so the next
+  /// retry reloads page 1 instead of appending after the stale items.
+  bool _firstPageFailed = false;
   Future<_PageLoadOutcome>? _activePageLoad;
 
   final List<ItemType> _allItems = [];
@@ -731,6 +738,11 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
   void _detachController(
     InfiniteGroupedListController<ItemType, GroupBy, GroupTitle> controller,
   ) {
+    // When the list remounts (e.g. a new key), the new State attaches before
+    // this one is disposed; leave a controller another State has claimed.
+    if (controller._getItemsCallback != _items) {
+      return;
+    }
     controller._getItemsCallback = null;
     controller._refreshCallback = null;
     controller._loadItemsCallback = null;
@@ -920,6 +932,7 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
         noMoreItemsToLoad = false;
       }
 
+      _firstPageFailed = false;
       _updateState(() {
         loading = false;
         hasError = false;
@@ -928,6 +941,9 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
       _scheduleViewportFillCheck();
       return _PageLoadOutcome.loaded;
     } catch (e) {
+      if (resetPaginationState) {
+        _firstPageFailed = true;
+      }
       _updateState(() {
         loading = false;
         hasError = true;
@@ -986,6 +1002,10 @@ class _InfiniteGroupState<ItemType, GroupBy, GroupTitle>
     if (widget.isReactiveMode) {
       _requestReactiveLoadMore();
       return Future<_PageLoadOutcome>.value(_PageLoadOutcome.skipped);
+    }
+
+    if (_firstPageFailed) {
+      return _loadFirstPage();
     }
 
     if (noMoreItemsToLoad) {
